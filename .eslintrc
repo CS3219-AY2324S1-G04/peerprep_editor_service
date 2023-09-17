@@ -1,0 +1,57 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/consistent-type-definitions": 1, // Use "interface" instead of "type"
+    "@typescript-eslint/consistent-generic-constructors": [
+      1,
+      "type-annotation"
+    ], // Specify type arguments in type-annotation instead of in the constructor
+    "@typescript-eslint/explicit-member-accessibility": 1, // Specify access modifiers
+    "@typescript-eslint/no-require-imports": 1, // Use ES6 "import" instead of CommonJS "require"
+
+    // Refer to https://typescript-eslint.io/rules/member-ordering/#default-configuration
+    "@typescript-eslint/member-ordering": 1,
+
+    // Uses ESLint's camelcase conventions
+    // Taken from https://typescript-eslint.io/rules/naming-convention/#enforce-the-codebase-follows-eslints-camelcase-conventions
+    "camelcase": 0,
+    "@typescript-eslint/naming-convention": [
+      1,
+      {
+        "selector": "default",
+        "format": ["camelCase"]
+      },
+
+      {
+        "selector": "variable",
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": "parameter",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+
+      {
+        "selector": "memberLike",
+        "modifiers": ["private"],
+        "format": ["camelCase"],
+        "leadingUnderscore": "require"
+      },
+
+      {
+        "selector": "typeLike",
+        "format": ["PascalCase"]
+      }
+    ],
+
+    "prettier/prettier": 1 // Enforce Prettier rules via ESLint
+  }
+}
