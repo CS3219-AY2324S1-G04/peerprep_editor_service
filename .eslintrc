@@ -8,9 +8,9 @@
     "prettier"
   ],
   "rules": {
-    "@typescript-eslint/consistent-type-definitions": 1, // Use "interface" instead of "type"
+    "@typescript-eslint/consistent-type-definitions": 2, // Use "interface" instead of "type"
     "@typescript-eslint/consistent-generic-constructors": [
-      1,
+      2,
       "type-annotation"
     ], // Specify type arguments in type-annotation instead of in the constructor
     "@typescript-eslint/explicit-member-accessibility": 2, // Specify access modifiers
