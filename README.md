@@ -1,4 +1,12 @@
-## ToDo
+## Conventions
+
+- **File naming convention** : Snake case (e.g. `file_name.ts`)
+- **Typescript naming convention** : ESLint's camel case convention described [here](https://typescript-eslint.io/rules/naming-convention/#enforce-the-codebase-follows-eslints-camelcase-conventions)
+- **Typescript member ordering** : Refer to [this](https://typescript-eslint.io/rules/member-ordering/#default-configuration)
+
+Refer to `.eslintrc` for more conventions. Alternatively, learn them as you encounter errors and warnings in your code.
+
+## To Do
 
 - Run `npm install` to install all dependencies specified in `package.json`
 - Make sure to change the name of the package in `package.json`
