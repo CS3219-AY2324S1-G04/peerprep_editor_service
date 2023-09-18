@@ -22,8 +22,9 @@ The following scripts can be executed via `npm run <script_name>`.
 - `start` : Builds and executes the app
 - `build` : Builds the app and stores it in the `./build` directory
 - `test` : Runs all tests in the `./tests` directory
-- `lint` : Lints all `.ts` files via ESLint
 - `format` : Formats all `.ts` files via Prettier
+- `lint` : Lints all `.ts` files via ESLint
+- `fix` : Formats all `.ts` files via Prettier and also fixes any auto-fixable linting issues
 
 ## Developer Dependencies
 
