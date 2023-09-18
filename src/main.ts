@@ -1,1 +1,3 @@
-// TODO: Entry point to your app
+/**
+ * @file Entry point to the program.
+ */

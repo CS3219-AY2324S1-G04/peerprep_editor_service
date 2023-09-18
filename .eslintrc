@@ -6,6 +6,7 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:jsdoc/recommended-typescript",
     "prettier"
   ],
   "rules": {
@@ -66,5 +67,17 @@
     ],
     "prettier/prettier": 2,
 
+    // "jsdoc/check-examples": 1, // TODO: Enable this when it is supported by ESLint 8
+    "jsdoc/check-indentation": 1,
+    "jsdoc/check-line-alignment": 1,
+    "jsdoc/no-bad-blocks": 1,
+    "jsdoc/no-blank-block-descriptions": 1,
+    "jsdoc/no-blank-blocks": 1,
+    "jsdoc/require-asterisk-prefix": 1,
+    "jsdoc/require-description-complete-sentence": 1,
+    "jsdoc/require-file-overview": 1,
+    "jsdoc/require-hyphen-before-param-description": 1,
+    "jsdoc/require-throws": 1,
+    "jsdoc/sort-tags": 1
   }
 }

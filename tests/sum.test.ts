@@ -1,5 +1,8 @@
 // TODO: Delete this file
-// This file is just for demonstrating testing
+
+/**
+ * @file For demonstrating testing. Please delete it.
+ */
 import { sum } from '../src/sum';
 
 describe('sum module', () => {
