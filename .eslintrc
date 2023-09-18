@@ -54,6 +54,17 @@
       }
     ],
 
-    "prettier/prettier": 2 // Enforce Prettier rules via ESLint
+    "max-len": [
+      2,
+      {
+        "code": 80,
+        "tabWidth": 2,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreRegExpLiterals": true
+      }
+    ],
+    "prettier/prettier": 2,
+
   }
 }
