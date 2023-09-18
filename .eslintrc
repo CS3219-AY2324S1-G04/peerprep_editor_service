@@ -9,14 +9,14 @@
     "prettier"
   ],
   "rules": {
-    "@typescript-eslint/consistent-type-definitions": 2, // Use "interface" instead of "type"
+    "@typescript-eslint/consistent-type-definitions": 2,
     "@typescript-eslint/consistent-generic-constructors": [
       2,
       "type-annotation"
-    ], // Specify type arguments in type-annotation instead of in the constructor
-    "@typescript-eslint/explicit-member-accessibility": 2, // Specify access modifiers
-    "@typescript-eslint/no-require-imports": 2, // Use ES6 "import" instead of CommonJS "require"
-    "@typescript-eslint/no-throw-literal": 2, // Prevent throwing of literals (prefer throwing Error objects)
+    ],
+    "@typescript-eslint/explicit-member-accessibility": 2,
+    "@typescript-eslint/no-require-imports": 2,
+    "@typescript-eslint/no-throw-literal": 2,
 
     // Refer to https://typescript-eslint.io/rules/member-ordering/#default-configuration
     "@typescript-eslint/member-ordering": 2,
