@@ -1,10 +1,10 @@
 ## Tools
 
-**Runtime environment** : NodeJS 18 LTS (aka NodeJS LTS Hydrogen)
-**Testing Framework** : Jest
-**Documentation Language** : JSDoc
-**Code Formatter** : Prettier
-**Linter** : ESLint
+- **Runtime environment** : NodeJS 18 LTS (aka NodeJS LTS Hydrogen)
+- **Testing Framework** : Jest
+- **Documentation Language** : JSDoc
+- **Code Formatter** : Prettier
+- **Linter** : ESLint
 
 ## Conventions
 
