@@ -3,7 +3,7 @@
 /**
  * @file For demonstrating testing. Please delete it.
  */
-import { sum } from '../src/sum';
+import { sum } from '../sum';
 
 describe('sum module', () => {
   test('adds 1 + 2 to equal 3', () => {

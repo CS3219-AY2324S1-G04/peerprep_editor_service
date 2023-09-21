@@ -7,8 +7,8 @@
     "start:dev": "nodemon",
     "start": "npm run build && node ./build/main.js",
     "build": "rimraf ./build && tsc",
-    "test": "jest ./tests",
-    "format": "prettier --config .prettierrc --write 'src/**/*.ts' --write 'tests/**/*.ts'",
+    "test": "jest ./src",
+    "format": "prettier --config .prettierrc --write 'src/**/*.ts'",
     "lint": "eslint . --ext .ts",
     "fix": "npm run format && eslint . --ext .ts --fix"
   },

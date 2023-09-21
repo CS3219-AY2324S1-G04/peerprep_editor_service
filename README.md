@@ -20,7 +20,7 @@ Refer to `.eslintrc` for more conventions. Alternatively, learn them as you enco
 - Make sure to change the name of the package in `package.json`
 - Make sure to change the description of the package in `package.json`
 - Delete this `README.md`
-- Delete `./src/sum.ts` and `./tests/sum.test.ts`
+- Delete `./src/sum.ts` and `./src/__tests__/sum.test.ts`
 
 ## NPM Scripts
 
@@ -29,7 +29,7 @@ The following scripts can be executed via `npm run <script_name>`.
 - `start:dev` : Executes the app for development purposes (supports auto refreshing when code changes)
 - `start` : Builds and executes the app
 - `build` : Builds the app and stores it in the `./build` directory
-- `test` : Runs all tests in the `./tests` directory
+- `test` : Runs all tests in the `./src` directory
 - `format` : Formats all `.ts` files via Prettier
 - `lint` : Lints all `.ts` files via ESLint
 - `fix` : Formats all `.ts` files via Prettier and also fixes any auto-fixable linting issues
