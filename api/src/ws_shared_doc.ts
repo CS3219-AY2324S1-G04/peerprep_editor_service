@@ -8,13 +8,12 @@ import {
   writeVarUint8Array,
 } from 'lib0/encoding';
 import debounce from 'lodash.debounce';
-import WebSocket from 'ws';
 import { Awareness, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import syncProtocol from 'y-protocols/sync';
 import Y from 'yjs';
 
 import { callbackHandler, isCallbackSet } from './callback';
-import { send } from './utils';
+import UserConnection from './user_connection';
 
 const messageSync = 0;
 const messageAwareness = 1;
@@ -32,21 +31,15 @@ export default class WSSharedDoc extends Y.Doc {
    * Maps from conn to set of controlled user ids.
    * Delete all user ids from awareness when this conn is closed.
    */
-  private _docs: Map<string, WSSharedDoc>;
-  private _name: string;
-  private _conns: Map<WebSocket, Set<number>>;
+  private _roomId: string;
+  private _connections: Map<UserConnection, Set<number>>;
   private _awareness: Awareness;
 
-  public constructor(
-    name: string,
-    gcEnabled: boolean,
-    docs: Map<string, WSSharedDoc>,
-  ) {
+  public constructor(roomId: string, gcEnabled: boolean) {
     super({ gc: gcEnabled });
 
-    this._name = name;
-    this._docs = docs;
-    this._conns = new Map();
+    this._roomId = roomId;
+    this._connections = new Map();
     this._awareness = new Awareness(this);
     this._awareness.setLocalState(null);
 
@@ -56,14 +49,14 @@ export default class WSSharedDoc extends Y.Doc {
       removed: number[];
     }
 
-    const awarenessChangeHandler = (
+    const onAwarenessUpdate = (
       { added, updated, removed }: AwarenessUpdate,
-      conn: WebSocket,
+      userConn: UserConnection,
     ) => {
       const changedClients = added.concat(updated, removed);
 
-      if (conn !== null) {
-        const connControlledIDs = this._conns.get(conn);
+      if (userConn !== null) {
+        const connControlledIDs = this._connections.get(userConn);
 
         if (connControlledIDs !== undefined) {
           added.forEach((clientID) => {
@@ -86,12 +79,12 @@ export default class WSSharedDoc extends Y.Doc {
 
       const buff = toUint8Array(encoder);
 
-      this._conns.forEach((_, c) => {
-        send(this._docs, this, c, buff);
+      this._connections.forEach((_, conn) => {
+        conn.send(buff);
       });
     };
 
-    const updateHandler = (
+    const onUpdate = (
       update: Uint8Array,
       origin: unknown,
       doc: WSSharedDoc,
@@ -103,14 +96,15 @@ export default class WSSharedDoc extends Y.Doc {
 
       const message = toUint8Array(encoder);
 
-      doc.conns.forEach((_: Set<number>, conn: WebSocket) =>
-        send(this._docs, doc, conn, message),
+      // Broadcast update.
+      doc.conns.forEach((_: Set<number>, conn: UserConnection) =>
+        conn.send(message),
       );
     };
 
-    this._awareness.on('update', awarenessChangeHandler);
+    this._awareness.on('update', onAwarenessUpdate);
 
-    this.on('update', updateHandler);
+    this.on('update', onUpdate);
 
     if (isCallbackSet) {
       this.on(
@@ -123,14 +117,14 @@ export default class WSSharedDoc extends Y.Doc {
   }
 
   public get conns() {
-    return this._conns;
+    return this._connections;
   }
 
   public get awareness() {
     return this._awareness;
   }
 
-  public get name() {
-    return this._name;
+  public get roomId() {
+    return this._roomId;
   }
 }
