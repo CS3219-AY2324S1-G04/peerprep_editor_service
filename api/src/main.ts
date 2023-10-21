@@ -8,7 +8,7 @@ import { setupWSConnection } from './setup';
 
 const wss = new WebSocket.Server({ noServer: true });
 
-const port = process.env.PORT || 1234;
+const port = process.env.PORT || 9004;
 
 const server = http.createServer((request, response) => {
   // eslint-disable-next-line @typescript-eslint/naming-convention

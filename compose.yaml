@@ -1,0 +1,11 @@
+services:
+  api:
+    build: ./api
+    ports: 
+      - "9004:9004"
+    networks:
+      - "peerprep_network"
+
+networks:
+  peerprep_network:
+    name: peerprep
