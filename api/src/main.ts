@@ -30,8 +30,12 @@ const handleUpgrade = (
   socket: Duplex,
   head: Buffer,
 ) => {
+  if (!request.url || !request.url.match(/^\/dev/)) {
+    console.log('reject', request.url);
+    return;
+  }
+
   const handleAuth = (client: WebSocket) => {
-    // Check room existence.
     wss.emit('connection', client, request);
   };
 

@@ -33,14 +33,14 @@ export default class UserConnection {
       this._conn.readyState !== wsReadyStateConnecting &&
       this._conn.readyState !== wsReadyStateOpen
     ) {
-      close();
+      this.close();
     }
     try {
       this._conn.send(m, (err) => {
-        err != null && close();
+        err != null && this.close();
       });
     } catch (e) {
-      close();
+      this.close();
     }
   }
 

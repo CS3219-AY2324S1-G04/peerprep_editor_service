@@ -41,8 +41,8 @@ export default class ConnectionHandler {
     const room = this._getRoom(req.url);
     const gc = true;
     const doc = this._docsManager.getDoc(room, gc);
-    const userConn = new UserConnection(conn, doc, this._onDocDeleted);
 
+    const userConn = new UserConnection(conn, doc, this._onDocDeleted);
     doc.conns.set(userConn, new Set());
 
     let pongReceived = true;

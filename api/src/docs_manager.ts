@@ -62,7 +62,7 @@ export default class DocsManager {
   }
 
   private _createDoc(room: string, gc: boolean) {
-    const doc = new WSSharedDoc(room, gcEnabled);
+    const doc = new WSSharedDoc(room, gcEnabled, 'function() {}');
     doc.gc = gc;
 
     if (persistence !== null) {

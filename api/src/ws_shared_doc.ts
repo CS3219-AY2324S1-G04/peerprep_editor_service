@@ -35,8 +35,12 @@ export default class WSSharedDoc extends Y.Doc {
   private _connections: Map<UserConnection, Set<number>>;
   private _awareness: Awareness;
 
-  public constructor(roomId: string, gcEnabled: boolean) {
+  public constructor(roomId: string, gcEnabled: boolean, data?: string) {
     super({ gc: gcEnabled });
+
+    if (data != null) {
+      this.getText().insert(0, data);
+    }
 
     this._roomId = roomId;
     this._connections = new Map();
