@@ -1,8 +1,10 @@
 services:
-  api:
+  editor_service_api:
     build: ./api
+    environment:
+      - PORT=${EDITOR_SERVICE_PORT}
     ports: 
-      - "9004:9004"
+      - "${EDITOR_SERVICE_PORT}:9004"
     networks:
       - "peerprep_network"
 

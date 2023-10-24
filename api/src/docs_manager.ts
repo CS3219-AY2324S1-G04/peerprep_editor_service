@@ -42,34 +42,38 @@ if (typeof persistenceDir === 'string') {
 
 export default class DocsManager {
   private _docs: Map<string, WSSharedDoc>;
+  private _gcEnabled: boolean;
 
-  public constructor() {
+  public constructor(gcEnabled: boolean = true) {
     this._docs = new Map();
+    this._gcEnabled = gcEnabled;
   }
 
   public get docs() {
     return this._docs;
   }
 
-  public getDoc(room: string, gc = true) {
-    return setIfUndefined(this._docs, room, () => {
-      return this._createDoc(room, gc);
-    });
+  public getDoc(roomId: string) {
+    return setIfUndefined(this._docs, roomId, () => this._setupDoc(roomId));
   }
 
-  public removeDoc(room: string) {
-    this._docs.delete(room);
+  public removeDoc(roomId: string) {
+    this._docs.delete(roomId);
   }
 
-  private _createDoc(room: string, gc: boolean) {
-    const doc = new WSSharedDoc(room, gcEnabled, 'function() {}');
-    doc.gc = gc;
+  private _setupDoc(roomId: string) {
+    return this._createDoc(roomId);
+  }
+
+  private _createDoc(roomId: string, data: string = '') {
+    const doc = new WSSharedDoc(roomId, gcEnabled, data);
+    doc.gc = this._gcEnabled;
 
     if (persistence !== null) {
-      persistence.bindState(room, doc);
+      persistence.bindState(roomId, doc);
     }
 
-    this._docs.set(room, doc);
+    this._docs.set(roomId, doc);
 
     return doc;
   }

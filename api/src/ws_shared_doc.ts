@@ -13,7 +13,7 @@ import syncProtocol from 'y-protocols/sync';
 import Y from 'yjs';
 
 import { callbackHandler, isCallbackSet } from './callback';
-import UserConnection from './user_connection';
+import UserConnection from './handlers/user_connection';
 
 const messageSync = 0;
 const messageAwareness = 1;
@@ -27,10 +27,6 @@ const CALLBACK_DEBOUNCE_MAXWAIT = process.env.CALLBACK_DEBOUNCE_MAXWAIT
   : 10000;
 
 export default class WSSharedDoc extends Y.Doc {
-  /**
-   * Maps from conn to set of controlled user ids.
-   * Delete all user ids from awareness when this conn is closed.
-   */
   private _roomId: string;
   private _connections: Map<UserConnection, Set<number>>;
   private _awareness: Awareness;
