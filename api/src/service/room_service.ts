@@ -1,34 +1,41 @@
 /**
- * @file Entry point for the editor api service.
+ * @file Room service.
  */
 import { Axios } from 'axios';
 
 import RoomModel from '../models/room_model';
 
 const SUCCESS_CODE = 200;
+const RES_FAILURE_ERR_MSG = 'Request failed!';
 
-class RoomService {
-  private _axios: Axios;
+/**
+ * Get room info for room id.
+ * @param roomServiceApi - The room service api.
+ * @param roomId - The room id.
+ * @returns Room model for room id if room exists, null otherwise.
+ */
+async function getRoom(
+  roomServiceApi: string,
+  roomId: string,
+): Promise<RoomModel | null> {
+  const axios = new Axios({
+    baseURL: roomServiceApi,
+  });
 
-  public constructor() {
-    this._axios = new Axios({
-      baseURL: 'http://localhost:9002/room-service/room',
-    });
-  }
+  try {
+    const res = await axios.get(`/room/${roomId}/info`);
 
-  public async getRoomInfo(roomId: string) {
-    try {
-      const res = await this._axios.get(`/${roomId}/info`);
-
-      if (res.status != SUCCESS_CODE) {
-        return null;
-      }
-
-      return new RoomModel(roomId, res.data.userids, res.data.questionId);
-    } catch (error) {
-      return null;
+    if (res.status != SUCCESS_CODE) {
+      throw new Error(RES_FAILURE_ERR_MSG);
     }
+
+    const data = JSON.parse(res.data).data;
+
+    return new RoomModel(roomId, data['users'], data['questions-id']);
+  } catch (error) {
+    console.log('Failed to get room info!', error);
+    return null;
   }
 }
 
-export default RoomService;
+export { getRoom };

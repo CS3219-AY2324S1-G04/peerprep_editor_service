@@ -3,11 +3,13 @@ services:
     build: ./api
     environment:
       - PORT=${EDITOR_SERVICE_PORT}
+      - ROOM_SERVICE_API=${ROOM_SERVICE_API}
+      - QUESTION_SERVICE_API=${QUESTION_SERVICE_API}
     ports: 
       - "${EDITOR_SERVICE_PORT}:9004"
     networks:
-      - "peerprep_network"
+      - peerprep
 
 networks:
-  peerprep_network:
-    name: peerprep
+  peerprep:
+      external: true

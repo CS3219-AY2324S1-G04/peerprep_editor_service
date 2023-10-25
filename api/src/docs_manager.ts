@@ -1,10 +1,12 @@
 /**
  * @file Manages docs.
  */
-import { setIfUndefined } from 'lib0/map';
 import { LeveldbPersistence } from 'y-leveldb';
 import Y from 'yjs';
 
+import EditorApiConfig from './configs/editor_api_config';
+import { getQuestion } from './service/question_service';
+import { getRoom } from './service/room_service';
 import { Persistence } from './utils';
 import WSSharedDoc from './ws_shared_doc';
 
@@ -43,8 +45,13 @@ if (typeof persistenceDir === 'string') {
 export default class DocsManager {
   private _docs: Map<string, WSSharedDoc>;
   private _gcEnabled: boolean;
+  private _editorApiConfig: EditorApiConfig;
 
-  public constructor(gcEnabled: boolean = true) {
+  public constructor(
+    editorApiConfig: EditorApiConfig,
+    gcEnabled: boolean = true,
+  ) {
+    this._editorApiConfig = editorApiConfig;
     this._docs = new Map();
     this._gcEnabled = gcEnabled;
   }
@@ -53,16 +60,54 @@ export default class DocsManager {
     return this._docs;
   }
 
-  public getDoc(roomId: string) {
-    return setIfUndefined(this._docs, roomId, () => this._setupDoc(roomId));
+  public async getDoc(roomId: string) {
+    if (this._docs.has(roomId)) {
+      return this._docs.get(roomId);
+    } else {
+      const newDoc = await this._setupDoc(roomId);
+      this._docs.set(roomId, newDoc);
+      return newDoc;
+    }
   }
 
   public removeDoc(roomId: string) {
     this._docs.delete(roomId);
   }
 
-  private _setupDoc(roomId: string) {
-    return this._createDoc(roomId);
+  private async _setupDoc(roomId: string) {
+    let data: string;
+
+    try {
+      const room = await getRoom(this._editorApiConfig.roomServiceApi, roomId);
+
+      if (room == undefined) {
+        throw new Error('Room not found! Ignoring template.');
+      }
+
+      const question = await getQuestion(
+        this._editorApiConfig.questionServiceApi,
+        room.questionId,
+      );
+
+      if (question == undefined) {
+        throw new Error('Question not found! Ignoring template.');
+      }
+
+      const template = question.templates.find((t) => {
+        return t.language === 'JavaScript';
+      });
+
+      if (template == undefined) {
+        throw new Error('Template not found! Ignoring template.');
+      }
+
+      data = template.code;
+    } catch (error) {
+      console.log('No template! ', error);
+      data = '';
+    }
+
+    return this._createDoc(roomId, data);
   }
 
   private _createDoc(roomId: string, data: string = '') {

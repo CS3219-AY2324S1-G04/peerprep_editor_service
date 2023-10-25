@@ -3,15 +3,20 @@
  */
 import WebSocket from 'ws';
 
+import EditorApiConfig from '../configs/editor_api_config';
 import DocsManager from '../docs_manager';
-import RoomModel from '../models/room_model';
-import RoomService from '../service/room_service';
+import { getRoom } from '../service/room_service';
 import UserConnection from './user_connection';
 
 class ConnectionSetupHandler {
   private _docsManager: DocsManager;
+  private _editorApiConfig: EditorApiConfig;
 
-  public constructor(docsManager: DocsManager) {
+  public constructor(
+    editorApiConfig: EditorApiConfig,
+    docsManager: DocsManager,
+  ) {
+    this._editorApiConfig = editorApiConfig;
     this._docsManager = docsManager;
   }
 
@@ -19,13 +24,20 @@ class ConnectionSetupHandler {
     conn.binaryType = 'arraybuffer';
 
     const roomId = this._getRoomId(req.url);
-    const room: RoomModel | null = await new RoomService().getRoomInfo(roomId);
+    const room = await getRoom(this._editorApiConfig.roomServiceApi, roomId);
 
     if (room == null) {
       conn.close();
+      return;
     }
 
-    const doc = this._docsManager.getDoc(roomId);
+    const doc = await this._docsManager.getDoc(roomId);
+
+    if (doc == null) {
+      conn.close();
+      return;
+    }
+
     new UserConnection(conn, doc, this._onDocDeleted);
   };
 
