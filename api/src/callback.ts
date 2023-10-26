@@ -22,7 +22,7 @@ export const callbackHandler = (
   origin: unknown,
   doc: WSSharedDoc,
 ) => {
-  const room = doc.name;
+  const room = doc.roomId;
 
   const dataToSend: {
     room: string;
