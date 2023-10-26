@@ -23,6 +23,7 @@ async function getRoom(
   });
 
   try {
+    // const res = await axios.get(`/room/${roomId}/info`);
     const res = await axios.get(`/room/${roomId}/info`);
 
     if (res.status != SUCCESS_CODE) {

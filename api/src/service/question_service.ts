@@ -32,7 +32,7 @@ async function getQuestion(questionServiceApi: string, questionId: string) {
 
     return new QuestionModel(data['_id'], data['title'], data['template']);
   } catch (error) {
-    console.log('Failed to get question!', questionId);
+    console.log('Failed to get question!', questionId, error);
     return null;
   }
 }
