@@ -8,6 +8,9 @@ import RoomModel from '../models/room_model';
 const SUCCESS_CODE = 200;
 const RES_FAILURE_ERR_MSG = 'Request failed!';
 
+const USER_IDS_DATA_KEY = 'users';
+const QUESTION_ID_DATA_KEY = 'questions-id';
+
 /**
  * Get room info for room id.
  * @param roomServiceApi - The room service api.
@@ -22,8 +25,9 @@ async function getRoom(
     baseURL: roomServiceApi,
   });
 
+  console.log('Getting room', roomId);
+
   try {
-    // const res = await axios.get(`/room/${roomId}/info`);
     const res = await axios.get(`/room/${roomId}/info`);
 
     if (res.status != SUCCESS_CODE) {
@@ -32,7 +36,11 @@ async function getRoom(
 
     const data = JSON.parse(res.data).data;
 
-    return new RoomModel(roomId, data['users'], data['questions-id']);
+    return new RoomModel(
+      roomId,
+      data[USER_IDS_DATA_KEY],
+      data[QUESTION_ID_DATA_KEY],
+    );
   } catch (error) {
     console.log('Failed to get room info!', error);
     return null;
