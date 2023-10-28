@@ -11,14 +11,10 @@ import RoomConnectionSocketHandler from './handlers/room_connect_socket_handler'
 export default class App {
   private _apiConfig: EditorApiConfig;
   private _express;
-  private _wss: WebSocket.Server;
   private _docsManager: DocsManager;
 
   public constructor(apiConfig: EditorApiConfig) {
     this._express = express();
-    this._wss = new WebSocket.Server({
-      noServer: true,
-    });
     this._apiConfig = apiConfig;
     this._docsManager = new DocsManager(apiConfig);
   }
@@ -27,19 +23,23 @@ export default class App {
    * Starts the server.
    */
   public start(): void {
+    const route = this._apiConfig.editorServiceApi + '/room';
+
+    const server = this._express.listen(this._apiConfig.port, () => {
+      console.log('Running on', this._apiConfig.port);
+    });
+
+    const wss = new WebSocket.Server({
+      noServer: true,
+      path: route,
+    });
+
     const connectionHandler = new RoomConnectionSocketHandler(
       this._apiConfig,
       this._docsManager,
     );
 
-    // TODO: Use route for socket.
-
-    this._wss.on('connection', connectionHandler.getHandler());
-
-    const server = this._express.listen(this._apiConfig.port, () => {
-      console.log('Running on port', this._apiConfig.port);
-    });
-
-    server.on('upgrade', connectionHandler.getUpgradeHandler(this._wss));
+    server.on('upgrade', connectionHandler.getUpgradeHandler(wss));
+    wss.on('connection', connectionHandler.getHandler());
   }
 }

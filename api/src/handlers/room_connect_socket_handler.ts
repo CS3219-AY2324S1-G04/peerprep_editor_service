@@ -70,6 +70,7 @@ class RoomConnectionSocketHandler {
       await this._docsManager.getDoc(roomId);
 
       const handleAuth = (client: WebSocket) => {
+        console.log('handle auth');
         wss.emit('connection', client, request);
       };
 
@@ -81,7 +82,7 @@ class RoomConnectionSocketHandler {
   }
 
   private _getRoomId(url: string) {
-    return url.slice(1).split('?')[0].split('/')[1];
+    return url.slice(1).split('?')[1].split('=')[1];
   }
 }
 
