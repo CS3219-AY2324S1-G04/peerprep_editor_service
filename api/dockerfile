@@ -1,5 +1,18 @@
-FROM node:latest
+FROM node:lts-hydrogen AS builder
+
 WORKDIR /editor_service_api
-COPY . .
-RUN npm i
-CMD npm run start
+COPY . . 
+RUN npm install
+RUN npm run build
+
+FROM node:lts-hydrogen
+
+WORKDIR /editor_service_api
+
+COPY --from=builder ./editor_service_api/build .
+COPY package.json .
+COPY package-lock.json .
+
+RUN npm install --omit=dev -y
+
+CMD node main
