@@ -20,8 +20,6 @@ async function getQuestion(questionServiceApi: string, questionId: string) {
   });
 
   try {
-    console.log('Getting question', questionId);
-
     const res = await axios.get(`questions/${questionId}`);
 
     if (res.status != SUCCESS_CODE) {

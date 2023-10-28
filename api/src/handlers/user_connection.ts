@@ -72,6 +72,8 @@ export default class UserConnection {
   }
 
   public close(persistence?: Persistence) {
+    console.log('Close connection');
+
     if (this._doc.conns.has(this)) {
       // Clean up conn.
       const controlledIds = this._doc.conns.get(this);
@@ -86,12 +88,15 @@ export default class UserConnection {
 
       // No more conns to doc.
       if (this._doc.conns.size === 0 && persistence != null) {
+        const roomId = this._doc.roomId;
+
         // If persisted, we store state and destroy ydocument.
         persistence.writeState(this._doc.roomId, this._doc).then(() => {
           this._doc.destroy();
         });
 
-        this._onDocDeleted(this._doc.roomId);
+        console.log('Doc deleted', this._doc.roomId);
+        this._onDocDeleted(roomId);
       }
     }
     this._conn.close();
@@ -164,6 +169,7 @@ export default class UserConnection {
   private _sendSyncStep1() {
     const encoder = createEncoder();
     writeVarUint(encoder, MessageType.messageSync);
+    console.log('sync step 1');
     syncProtocol.writeSyncStep1(encoder, this._doc);
 
     this.send(toUint8Array(encoder));

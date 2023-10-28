@@ -23,12 +23,11 @@ export default class App {
    * Starts the server.
    */
   public start(): void {
-    const route = this._apiConfig.editorServiceApi + '/room';
-
     const server = this._express.listen(this._apiConfig.port, () => {
       console.log('Running on', this._apiConfig.port);
     });
 
+    const route = this._apiConfig.serviceRoute + '/room';
     const wss = new WebSocket.Server({
       noServer: true,
       path: route,

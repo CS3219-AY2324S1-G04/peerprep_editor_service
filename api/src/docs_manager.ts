@@ -84,6 +84,7 @@ export default class DocsManager {
         throw new Error('Room not found! Ignoring template.');
       }
 
+      console.log('Getting question', room.questionId, room.roomId);
       const question = await getQuestion(
         this._editorApiConfig.questionServiceApi,
         room.questionId,
@@ -100,6 +101,8 @@ export default class DocsManager {
       if (template == undefined) {
         throw new Error('Template not found! Ignoring template.');
       }
+
+      console.log('Using template', template);
 
       data = template.code;
     } catch (error) {
