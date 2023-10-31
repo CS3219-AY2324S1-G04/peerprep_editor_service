@@ -8,11 +8,15 @@ import {
   writeVarUint8Array,
 } from 'lib0/encoding';
 import debounce from 'lodash.debounce';
+import WebSocket from 'ws';
 import { Awareness, encodeAwarenessUpdate } from 'y-protocols/awareness';
+import awarenessProtocol from 'y-protocols/awareness';
 import syncProtocol from 'y-protocols/sync';
 import Y from 'yjs';
 
 import { callbackHandler, isCallbackSet } from './callback';
+import AwarenessMessageHandler from './handlers/socket_handlers/awareness_message_handler';
+import SyncMessageHandler from './handlers/socket_handlers/sync_message_handler';
 import UserConnection from './handlers/user_connection';
 
 const messageSync = 0;
@@ -26,85 +30,33 @@ const CALLBACK_DEBOUNCE_MAXWAIT = process.env.CALLBACK_DEBOUNCE_MAXWAIT
   ? parseInt(process.env.CALLBACK_DEBOUNCE_MAXWAIT)
   : 10000;
 
+interface AwarenessUpdate {
+  added: number[];
+  updated: number[];
+  removed: number[];
+}
+
 export default class WSSharedDoc extends Y.Doc {
   private _roomId: string;
-  private _connections: Map<UserConnection, Set<number>>;
+  private _conns: Map<UserConnection, Set<number>>;
   private _awareness: Awareness;
 
   public constructor(roomId: string, gcEnabled: boolean, data?: string) {
     super({ gc: gcEnabled });
 
+    this._roomId = roomId;
+    this._conns = new Map();
+    this._awareness = new Awareness(this);
+
+    this._awareness.on('update', this._onAwarenessUpdate);
+    this.on('update', this._onUpdate);
+
+    this._awareness.setLocalState(null);
+
+    // Set initial doc text.
     if (data != null) {
       this.getText().insert(0, data);
     }
-
-    this._roomId = roomId;
-    this._connections = new Map();
-    this._awareness = new Awareness(this);
-    this._awareness.setLocalState(null);
-
-    interface AwarenessUpdate {
-      added: number[];
-      updated: number[];
-      removed: number[];
-    }
-
-    const onAwarenessUpdate = (
-      { added, updated, removed }: AwarenessUpdate,
-      userConn: UserConnection,
-    ) => {
-      const changedClients = added.concat(updated, removed);
-
-      if (userConn !== null) {
-        const connControlledIDs = this._connections.get(userConn);
-
-        if (connControlledIDs !== undefined) {
-          added.forEach((clientID) => {
-            connControlledIDs.add(clientID);
-          });
-
-          removed.forEach((clientID) => {
-            connControlledIDs.delete(clientID);
-          });
-        }
-      }
-
-      // Broadcast awareness update
-      const encoder = createEncoder();
-      writeVarUint(encoder, messageAwareness);
-      writeVarUint8Array(
-        encoder,
-        encodeAwarenessUpdate(this._awareness, changedClients),
-      );
-
-      const buff = toUint8Array(encoder);
-
-      this._connections.forEach((_, conn) => {
-        conn.send(buff);
-      });
-    };
-
-    const onUpdate = (
-      update: Uint8Array,
-      origin: unknown,
-      doc: WSSharedDoc,
-    ) => {
-      const encoder = createEncoder();
-
-      writeVarUint(encoder, messageSync);
-      syncProtocol.writeUpdate(encoder, update);
-
-      const message = toUint8Array(encoder);
-
-      // Broadcast update.
-      doc.conns.forEach((_: Set<number>, conn: UserConnection) =>
-        conn.send(message),
-      );
-    };
-
-    this._awareness.on('update', onAwarenessUpdate);
-
-    this.on('update', onUpdate);
 
     if (isCallbackSet) {
       this.on(
@@ -116,15 +68,92 @@ export default class WSSharedDoc extends Y.Doc {
     }
   }
 
-  public get conns() {
-    return this._connections;
-  }
-
-  public get awareness() {
-    return this._awareness;
-  }
-
   public get roomId() {
     return this._roomId;
   }
+
+  public registerConn(socket: WebSocket) {
+    const newConn = new UserConnection(socket, () => {
+      this._onConnectionClose(newConn);
+    });
+
+    newConn.addMessageHandlers([
+      new SyncMessageHandler(this, newConn),
+      new AwarenessMessageHandler(this._awareness, newConn),
+    ]);
+
+    newConn.sendSyncStep1(this);
+    newConn.sendAwareness(this._awareness);
+
+    this._conns.set(newConn, new Set());
+  }
+
+  public broadcastMessage(message: Uint8Array) {
+    this._conns.forEach((_, conn) => conn.send(message));
+  }
+
+  private _onConnectionClose(conn: UserConnection) {
+    const controlledIds = this._conns.get(conn);
+
+    this._conns.delete(conn);
+
+    awarenessProtocol.removeAwarenessStates(
+      this._awareness,
+      Array.from(controlledIds != null ? controlledIds : []),
+      null,
+    );
+
+    // TODO: Handle persistence.
+    if (this._conns.size === 0) {
+      console.log('No more connections!', this._roomId);
+    }
+  }
+
+  private _onAwarenessUpdate = (
+    { added, updated, removed }: AwarenessUpdate,
+    userConn: UserConnection,
+  ) => {
+    const changedClients = added.concat(updated, removed);
+
+    if (userConn !== null) {
+      const awarenessIds = this._conns.get(userConn);
+
+      if (awarenessIds !== undefined) {
+        added.forEach((clientID) => {
+          awarenessIds.add(clientID);
+        });
+
+        removed.forEach((clientID) => {
+          awarenessIds.delete(clientID);
+        });
+      }
+    }
+
+    // Broadcast awareness update
+    const encoder = createEncoder();
+    writeVarUint(encoder, messageAwareness);
+    writeVarUint8Array(
+      encoder,
+      encodeAwarenessUpdate(this._awareness, changedClients),
+    );
+
+    const buff = toUint8Array(encoder);
+    this.broadcastMessage(buff);
+  };
+
+  private _onUpdate = (
+    update: Uint8Array,
+    origin: unknown,
+    doc: WSSharedDoc,
+  ) => {
+    const encoder = createEncoder();
+
+    writeVarUint(encoder, messageSync);
+    syncProtocol.writeUpdate(encoder, update);
+
+    const message = toUint8Array(encoder);
+
+    // Broadcast update.
+    doc.broadcastMessage(message);
+  };
 }
