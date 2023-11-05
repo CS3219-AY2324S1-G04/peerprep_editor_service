@@ -9,8 +9,8 @@ const SUCCESS_CODE = 200;
 const RES_FAILURE_ERR_MSG = 'Request failed!';
 
 const ROOM_ID_DATA_KEY = 'room-id';
-const USER_IDS_DATA_KEY = 'users';
-const QUESTION_ID_DATA_KEY = 'questions-id';
+const USER_IDS_DATA_KEY = 'users-ids';
+const QUESTION_ID_DATA_KEY = 'question-id';
 
 /**
  * Get room info for room id.
@@ -28,13 +28,14 @@ async function getRoom(
   });
 
   try {
-    const res = await axios.get(`/room/${roomId}/info`);
+    const res = await axios.get(`/rooms/${roomId}`);
 
     if (res.status != SUCCESS_CODE) {
       throw new Error(RES_FAILURE_ERR_MSG);
     }
 
-    const data = JSON.parse(res.data).data;
+    const data = JSON.parse(res.data);
+    console.log('question data', data);
 
     return new RoomModel(
       roomId,
@@ -63,7 +64,7 @@ async function getUserRoomInfo(
   });
 
   try {
-    const res = await axios.post(`/room/user/?session-token=${sessionToken}`);
+    const res = await axios.post(`/room/?session-token=${sessionToken}`);
 
     if (res.status != SUCCESS_CODE) {
       throw new Error(RES_FAILURE_ERR_MSG);

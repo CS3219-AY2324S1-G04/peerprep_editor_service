@@ -27,6 +27,7 @@ export default class DocsManager {
     return this._docs;
   }
 
+  // Lazy get doc. Setup doc if it doesn't exist yet.
   public async getDoc(roomId: string) {
     if (this._docs.has(roomId)) {
       return this._docs.get(roomId);

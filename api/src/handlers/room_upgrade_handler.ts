@@ -8,7 +8,7 @@ import WebSocket from 'ws';
 
 import EditorApiConfig from '../configs/editor_api_config';
 import DocsManager from '../docs_manager';
-import { getUserRoomInfo } from '../service/room_service';
+import { getRoom, getUserRoomInfo } from '../service/room_service';
 import UpgradeHandler from './upgrade_handler';
 
 export default class RoomUpgradeHandler extends UpgradeHandler {
@@ -43,6 +43,7 @@ export default class RoomUpgradeHandler extends UpgradeHandler {
       if (!request.headers?.cookie) {
         throw new Error('Not authorized');
       }
+
       const sessionToken = cookie.parse(request.headers.cookie)[
         'session-token'
       ];
@@ -57,10 +58,7 @@ export default class RoomUpgradeHandler extends UpgradeHandler {
 
       const roomId = this._parseUrlForRoomId(request.url);
 
-      const room = await getUserRoomInfo(
-        this._apiConfig.roomServiceApi,
-        sessionToken,
-      );
+      const room = await getRoom(this._apiConfig.roomServiceApi, roomId);
 
       if (!room || room.roomId !== roomId) {
         throw new Error('Room not found!');
