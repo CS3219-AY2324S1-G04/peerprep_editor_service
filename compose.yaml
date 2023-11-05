@@ -4,12 +4,14 @@ services:
     environment:
       PORT: ${EDITOR_SERVICE_PORT}
       SERVICE_ROUTE: ${SERVICE_ROUTE}
-      ROOM_SERVICE_API: 'http://peerprep_room_service_api:9003/room-service'
+      ROOM_SERVICE_API: 'http://room_service_api:9003/room-service'
       QUESTION_SERVICE_API: 'http://question_service_api:9001/question-service'
-    ports: 
+    ports:
       - "${EDITOR_SERVICE_PORT}:9004"
     networks:
       - peerprep
+    restart: unless-stopped
+
 
 networks:
   peerprep:

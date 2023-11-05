@@ -6,8 +6,11 @@ import WebSocket from 'ws';
 
 import EditorApiConfig from './configs/editor_api_config';
 import DocsManager from './docs_manager';
-import RoomConnectionSocketHandler from './handlers/room_connect_socket_handler';
+import RoomConnectionHandler from './handlers/room_connection_handler';
+import RoomUpgradeHandler from './handlers/room_upgrade_handler';
 
+const HTTP_UPGRADE_EVENT = 'upgrade';
+const WSS_CONNECTION_EVENT = 'connection';
 export default class App {
   private _apiConfig: EditorApiConfig;
   private _express;
@@ -33,12 +36,18 @@ export default class App {
       path: route,
     });
 
-    const connectionHandler = new RoomConnectionSocketHandler(
+    const connectionHandler = new RoomConnectionHandler(
       this._apiConfig,
       this._docsManager,
     );
 
-    server.on('upgrade', connectionHandler.getUpgradeHandler(wss));
-    wss.on('connection', connectionHandler.getHandler());
+    const upgradeHandler = new RoomUpgradeHandler(
+      this._apiConfig,
+      this._docsManager,
+      wss,
+    );
+
+    server.on(HTTP_UPGRADE_EVENT, upgradeHandler.upgrade);
+    wss.on(WSS_CONNECTION_EVENT, connectionHandler.handle);
   }
 }
