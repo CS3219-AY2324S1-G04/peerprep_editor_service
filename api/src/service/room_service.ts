@@ -11,6 +11,7 @@ const RES_FAILURE_ERR_MSG = 'Request failed!';
 const ROOM_ID_DATA_KEY = 'room-id';
 const USER_IDS_DATA_KEY = 'users-ids';
 const QUESTION_ID_DATA_KEY = 'question-id';
+const QUESTION_LANG_SLUG_KEY = 'question-lang-slug';
 
 /**
  * Get room info for room id.
@@ -41,6 +42,7 @@ async function getRoom(
       roomId,
       data[USER_IDS_DATA_KEY],
       data[QUESTION_ID_DATA_KEY],
+      data[QUESTION_LANG_SLUG_KEY],
     );
   } catch (error) {
     console.log('Failed to get room info!', error);
@@ -76,6 +78,7 @@ async function getUserRoomInfo(
       data[ROOM_ID_DATA_KEY],
       data[USER_IDS_DATA_KEY],
       data[QUESTION_ID_DATA_KEY],
+      data[QUESTION_LANG_SLUG_KEY],
     );
   } catch (error) {
     console.log('Failed to get room info!', error);

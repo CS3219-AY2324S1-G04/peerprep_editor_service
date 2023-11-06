@@ -18,6 +18,7 @@ export default class QuestionModel {
 }
 
 interface QuestionTemplate {
+  langSlug: string;
   language: string;
   code: string;
 }

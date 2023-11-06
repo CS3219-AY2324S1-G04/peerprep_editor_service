@@ -63,7 +63,7 @@ export default class DocsManager {
       }
 
       const template = question.templates.find((t) => {
-        return t.language === 'JavaScript';
+        return t.langSlug === room.langSlug;
       });
 
       if (template == undefined) {
