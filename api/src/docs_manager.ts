@@ -28,7 +28,9 @@ export default class DocsManager {
   }
 
   // Lazy get doc. Setup doc if it doesn't exist yet.
-  public async setupDocIfNotExist(roomId: string): Promise<WSSharedDoc | undefined> {
+  public async setupDocIfNotExist(
+    roomId: string,
+  ): Promise<WSSharedDoc | undefined> {
     if (this._docs.has(roomId)) {
       return this._docs.get(roomId);
     } else {

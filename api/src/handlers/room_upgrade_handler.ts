@@ -8,6 +8,7 @@ import WebSocket from 'ws';
 
 import EditorApiConfig from '../configs/editor_api_config';
 import DocsManager from '../docs_manager';
+import AccessTokenVerifier from '../service/access_token_verifier';
 import { getRoom, getUserRoomInfo } from '../service/room_service';
 import UpgradeHandler from './upgrade_handler';
 
@@ -15,16 +16,19 @@ export default class RoomUpgradeHandler extends UpgradeHandler {
   private _docsManager: DocsManager;
   private _apiConfig: EditorApiConfig;
   private _wss: WebSocket.Server;
+  private _accessTokenVerifier: AccessTokenVerifier;
 
   public constructor(
     editorApiConfig: EditorApiConfig,
     docsManager: DocsManager,
     wss: WebSocket.Server,
+    accessTokenVerifier: AccessTokenVerifier,
   ) {
     super();
     this._apiConfig = editorApiConfig;
     this._docsManager = docsManager;
     this._wss = wss;
+    this._accessTokenVerifier = accessTokenVerifier;
   }
 
   public override get upgrade() {
@@ -44,23 +48,21 @@ export default class RoomUpgradeHandler extends UpgradeHandler {
         throw new Error('Not authorized');
       }
 
-      const sessionToken = cookie.parse(request.headers.cookie)[
-        'session-token'
-      ];
-
-      if (!sessionToken) {
-        throw new Error('Not authorized');
+      if (!request.url) {
+        throw new Error('Invalid url');
       }
 
-      if (!request.url) {
-        throw new Error('Invalid url!');
+      const accessToken = cookie.parse(request.headers.cookie)['access-token'];
+      const userProfile = this._accessTokenVerifier.verify(accessToken);
+
+      if (!userProfile) {
+        throw new Error();
       }
 
       const roomId = this._parseUrlForRoomId(request.url);
-
       const room = await getRoom(this._apiConfig.roomServiceApi, roomId);
 
-      if (!room || room.roomId !== roomId) {
+      if (!room || !room.userIds.includes(userProfile.userId)) {
         throw new Error('Room not found!');
       }
 

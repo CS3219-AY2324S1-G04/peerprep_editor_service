@@ -9,7 +9,7 @@ const SUCCESS_CODE = 200;
 const RES_FAILURE_ERR_MSG = 'Request failed!';
 
 const ROOM_ID_DATA_KEY = 'room-id';
-const USER_IDS_DATA_KEY = 'users-ids';
+const USER_IDS_DATA_KEY = 'user-ids';
 const QUESTION_ID_DATA_KEY = 'question-id';
 const QUESTION_LANG_SLUG_KEY = 'question-lang-slug';
 
