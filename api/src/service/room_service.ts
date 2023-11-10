@@ -27,26 +27,20 @@ async function getRoom(
     baseURL: roomServiceApi,
     withCredentials: true,
   });
+  const res = await axios.get(`/rooms/${roomId}`);
 
-  try {
-    const res = await axios.get(`/rooms/${roomId}`);
-
-    if (res.status != SUCCESS_CODE) {
-      throw new Error(RES_FAILURE_ERR_MSG);
-    }
-
-    const data = JSON.parse(res.data);
-
-    return new RoomModel(
-      roomId,
-      data[USER_IDS_DATA_KEY],
-      data[QUESTION_ID_DATA_KEY],
-      data[QUESTION_LANG_SLUG_KEY],
-    );
-  } catch (error) {
-    console.log('Failed to get room info!', error);
-    return null;
+  if (res.status != SUCCESS_CODE) {
+    throw new Error(RES_FAILURE_ERR_MSG);
   }
+
+  const data = JSON.parse(res.data);
+
+  return new RoomModel(
+    roomId,
+    data[USER_IDS_DATA_KEY],
+    data[QUESTION_ID_DATA_KEY],
+    data[QUESTION_LANG_SLUG_KEY],
+  );
 }
 
 /**
@@ -63,26 +57,20 @@ async function getUserRoomInfo(
     baseURL: roomServiceApi,
     withCredentials: true,
   });
+  const res = await axios.post(`/room/?session-token=${sessionToken}`);
 
-  try {
-    const res = await axios.post(`/room/?session-token=${sessionToken}`);
-
-    if (res.status != SUCCESS_CODE) {
-      throw new Error(RES_FAILURE_ERR_MSG);
-    }
-
-    const data = JSON.parse(res.data).data;
-
-    return new RoomModel(
-      data[ROOM_ID_DATA_KEY],
-      data[USER_IDS_DATA_KEY],
-      data[QUESTION_ID_DATA_KEY],
-      data[QUESTION_LANG_SLUG_KEY],
-    );
-  } catch (error) {
-    console.log('Failed to get room info!', error);
-    return null;
+  if (res.status != SUCCESS_CODE) {
+    throw new Error(RES_FAILURE_ERR_MSG);
   }
+
+  const data = JSON.parse(res.data).data;
+
+  return new RoomModel(
+    data[ROOM_ID_DATA_KEY],
+    data[USER_IDS_DATA_KEY],
+    data[QUESTION_ID_DATA_KEY],
+    data[QUESTION_LANG_SLUG_KEY],
+  );
 }
 
 export { getRoom, getUserRoomInfo };

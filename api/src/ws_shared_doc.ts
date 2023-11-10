@@ -1,5 +1,5 @@
 /**
- * @file Representation of shared doc using websocket.
+ * @file Handles syncing of updates from client.
  */
 import {
   createEncoder,
@@ -49,9 +49,9 @@ export default class WSSharedDoc extends Y.Doc {
     this._awareness = new Awareness(this);
 
     this._awareness.on('update', this._onAwarenessUpdate);
-    this.on('update', this._onDocUpdate);
-
     this._awareness.setLocalState(null);
+
+    this.on('update', this._broadcastUpdate);
 
     // Set initial doc text.
     if (data != null) {
@@ -111,12 +111,12 @@ export default class WSSharedDoc extends Y.Doc {
 
   private _onAwarenessUpdate = (
     { added, updated, removed }: AwarenessUpdate,
-    userConn: UserConnection,
+    originUserConn: UserConnection,
   ) => {
     const changedClients = added.concat(updated, removed);
 
-    if (userConn !== null) {
-      const awarenessIds = this._conns.get(userConn);
+    if (originUserConn !== null) {
+      const awarenessIds = this._conns.get(originUserConn);
 
       if (awarenessIds !== undefined) {
         added.forEach((clientID) => {
@@ -129,7 +129,20 @@ export default class WSSharedDoc extends Y.Doc {
       }
     }
 
-    // Broadcast awareness update
+    this._broadcastAwarenessUpdate(changedClients);
+  };
+
+  private _broadcastUpdate = (update: Uint8Array) => {
+    const encoder = createEncoder();
+
+    writeVarUint(encoder, messageSync);
+    syncProtocol.writeUpdate(encoder, update);
+    const message = toUint8Array(encoder);
+
+    this.broadcastMessage(message);
+  };
+
+  private _broadcastAwarenessUpdate(changedClients: number[]) {
     const encoder = createEncoder();
     writeVarUint(encoder, messageAwareness);
     writeVarUint8Array(
@@ -139,21 +152,5 @@ export default class WSSharedDoc extends Y.Doc {
 
     const buff = toUint8Array(encoder);
     this.broadcastMessage(buff);
-  };
-
-  private _onDocUpdate = (
-    update: Uint8Array,
-    origin: unknown,
-    doc: WSSharedDoc,
-  ) => {
-    const encoder = createEncoder();
-
-    writeVarUint(encoder, messageSync);
-    syncProtocol.writeUpdate(encoder, update);
-
-    const message = toUint8Array(encoder);
-
-    // Broadcast update.
-    doc.broadcastMessage(message);
-  };
+  }
 }

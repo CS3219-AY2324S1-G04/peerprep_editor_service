@@ -10,7 +10,7 @@ import WSSharedDoc from './ws_shared_doc';
 const gcEnabled = process.env.GC !== 'false' && process.env.GC !== '0';
 
 export default class DocsManager {
-  private _docs: Map<string, WSSharedDoc>;
+  private _wsDocs: Map<string, WSSharedDoc>;
   private _gcEnabled: boolean;
   private _editorApiConfig: EditorApiConfig;
 
@@ -19,66 +19,36 @@ export default class DocsManager {
     gcEnabled: boolean = true,
   ) {
     this._editorApiConfig = editorApiConfig;
-    this._docs = new Map();
+    this._wsDocs = new Map();
     this._gcEnabled = gcEnabled;
   }
 
-  public get docs() {
-    return this._docs;
-  }
-
-  // Lazy get doc. Setup doc if it doesn't exist yet.
   public async setupDocIfNotExist(
     roomId: string,
   ): Promise<WSSharedDoc | undefined> {
-    if (this._docs.has(roomId)) {
-      return this._docs.get(roomId);
-    } else {
-      const newDoc = await this._setupDoc(roomId);
-      this._docs.set(roomId, newDoc);
-      return newDoc;
+    if (this._wsDocs.has(roomId)) {
+      return this._wsDocs.get(roomId);
     }
+
+    const newDoc = await this._setupDoc(roomId);
+    this._wsDocs.set(roomId, newDoc);
+    return newDoc;
   }
 
   public getDoc(roomId: string): WSSharedDoc | undefined {
-    return this._docs.get(roomId);
+    return this._wsDocs.get(roomId);
   }
 
   public removeDoc(roomId: string): void {
-    this._docs.delete(roomId);
+    this._wsDocs.delete(roomId);
   }
 
   private async _setupDoc(roomId: string) {
     let data: string;
 
     try {
-      const room = await getRoom(this._editorApiConfig.roomServiceApi, roomId);
-
-      if (room == undefined) {
-        throw new Error('Room not found! Ignoring template.');
-      }
-
-      console.log('Getting question', room.questionId, room.roomId);
-      const question = await getQuestion(
-        this._editorApiConfig.questionServiceApi,
-        room.questionId,
-      );
-
-      if (question == undefined) {
-        throw new Error('Question not found! Ignoring template.');
-      }
-
-      const template = question.templates.find((t) => {
-        return t.langSlug === room.langSlug;
-      });
-
-      if (template == undefined) {
-        throw new Error('Template not found! Ignoring template.');
-      }
-
-      console.log('Using template', template);
-
-      data = template.code;
+      data = await this._getTemplateForRoom(roomId);
+      console.log('Using template', data);
     } catch (error) {
       console.log('No template! ', error);
       data = '';
@@ -87,11 +57,35 @@ export default class DocsManager {
     return this._createDoc(roomId, data);
   }
 
+  private async _getTemplateForRoom(roomId: string) {
+    const room = await getRoom(this._editorApiConfig.roomServiceApi, roomId);
+
+    if (room == undefined) {
+      throw new Error('Room not found! Ignoring template.');
+    }
+
+    console.log('Getting question', room.questionId, room.roomId);
+    const question = await getQuestion(
+      this._editorApiConfig.questionServiceApi,
+      room.questionId,
+    );
+
+    const template = question.templates.find((t) => {
+      return t.langSlug === room.langSlug;
+    });
+
+    if (template == undefined) {
+      throw new Error('Template not found! Ignoring template.');
+    }
+
+    return template.code;
+  }
+
   private _createDoc(roomId: string, data: string = '') {
     const doc = new WSSharedDoc(roomId, gcEnabled, data);
     doc.gc = this._gcEnabled;
 
-    this._docs.set(roomId, doc);
+    this._wsDocs.set(roomId, doc);
 
     return doc;
   }

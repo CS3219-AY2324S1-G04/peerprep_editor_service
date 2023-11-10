@@ -5,9 +5,6 @@ import { Axios } from 'axios';
 
 import QuestionModel from '../models/question_model';
 
-const SUCCESS_CODE = 200;
-const RES_FAILURE_ERR_MSG = 'Request failed!';
-
 /**
  * Get question info for question id.
  * @param questionServiceApi - The question service api.
@@ -19,20 +16,9 @@ async function getQuestion(questionServiceApi: string, questionId: string) {
     baseURL: questionServiceApi,
   });
 
-  try {
-    const res = await axios.get(`questions/${questionId}`);
-
-    if (res.status != SUCCESS_CODE) {
-      throw new Error(RES_FAILURE_ERR_MSG);
-    }
-
-    const data = JSON.parse(res.data).data;
-
-    return new QuestionModel(data['_id'], data['title'], data['template']);
-  } catch (error) {
-    console.log('Failed to get question!', questionId, error);
-    return null;
-  }
+  const res = await axios.get(`questions/${questionId}`);
+  const data = JSON.parse(res.data).data;
+  return new QuestionModel(data['_id'], data['title'], data['template']);
 }
 
 export { getQuestion };
