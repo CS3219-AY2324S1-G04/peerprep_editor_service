@@ -64,7 +64,7 @@ export default class RoomUpgradeHandler extends UpgradeHandler {
         throw new Error('Room not found!');
       }
 
-      await this._docsManager.getDoc(roomId);
+      await this._docsManager.setupDocIfNotExist(roomId);
 
       const handleAuth = (client: WebSocket) => {
         console.log('handle auth');

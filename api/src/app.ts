@@ -11,6 +11,7 @@ import RoomUpgradeHandler from './handlers/room_upgrade_handler';
 
 const HTTP_UPGRADE_EVENT = 'upgrade';
 const WSS_CONNECTION_EVENT = 'connection';
+
 export default class App {
   private _apiConfig: EditorApiConfig;
   private _express;

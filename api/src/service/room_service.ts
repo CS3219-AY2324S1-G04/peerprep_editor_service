@@ -36,7 +36,6 @@ async function getRoom(
     }
 
     const data = JSON.parse(res.data);
-    console.log('question data', data);
 
     return new RoomModel(
       roomId,
