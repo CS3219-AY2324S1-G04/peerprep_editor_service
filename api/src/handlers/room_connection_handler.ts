@@ -29,17 +29,11 @@ export default class RoomConnectionHandler extends ConnectionHandler {
   }
 
   private async _setupConnection(conn: WebSocket, req: Request) {
-    console.log('connection');
+    console.log('\n Setup connection');
 
     try {
       const roomId = this._parseUrlForRoomId(req.url);
-      const room = await getRoom(this._apiConfig.roomServiceApi, roomId);
-
-      if (room == null) {
-        throw new Error(`Room does not exist! ${roomId}`);
-      }
-
-      const doc = await this._docsManager.getDoc(roomId);
+      const doc = this._docsManager.getDoc(roomId);
 
       if (doc == null) {
         throw new Error(`Unable to get doc! ${roomId}`);
@@ -50,6 +44,8 @@ export default class RoomConnectionHandler extends ConnectionHandler {
       console.log('Unable to upgrade connection!', error);
       conn.close();
     }
+
+    console.log('Setup connection complete');
   }
 
   private _parseUrlForRoomId(url: string) {

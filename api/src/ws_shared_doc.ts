@@ -17,7 +17,7 @@ import Y from 'yjs';
 import { callbackHandler, isCallbackSet } from './callback';
 import AwarenessMessageHandler from './handlers/socket_handlers/awareness_message_handler';
 import SyncMessageHandler from './handlers/socket_handlers/sync_message_handler';
-import UserConnection from './handlers/user_connection';
+import UserConnection from './user_connection';
 
 const messageSync = 0;
 const messageAwareness = 1;
@@ -49,7 +49,7 @@ export default class WSSharedDoc extends Y.Doc {
     this._awareness = new Awareness(this);
 
     this._awareness.on('update', this._onAwarenessUpdate);
-    this.on('update', this._onUpdate);
+    this.on('update', this._onDocUpdate);
 
     this._awareness.setLocalState(null);
 
@@ -141,7 +141,7 @@ export default class WSSharedDoc extends Y.Doc {
     this.broadcastMessage(buff);
   };
 
-  private _onUpdate = (
+  private _onDocUpdate = (
     update: Uint8Array,
     origin: unknown,
     doc: WSSharedDoc,

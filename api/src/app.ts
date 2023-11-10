@@ -8,9 +8,12 @@ import EditorApiConfig from './configs/editor_api_config';
 import DocsManager from './docs_manager';
 import RoomConnectionHandler from './handlers/room_connection_handler';
 import RoomUpgradeHandler from './handlers/room_upgrade_handler';
+import AccessTokenVerifier from './service/access_token_verifier';
+import { getAccessTokenPublicKey } from './service/user_service';
 
 const HTTP_UPGRADE_EVENT = 'upgrade';
 const WSS_CONNECTION_EVENT = 'connection';
+
 export default class App {
   private _apiConfig: EditorApiConfig;
   private _express;
@@ -25,7 +28,11 @@ export default class App {
   /**
    * Starts the server.
    */
-  public start(): void {
+  public async start(): Promise<void> {
+    const accessTokenVerifier: AccessTokenVerifier = new AccessTokenVerifier(
+      await getAccessTokenPublicKey(this._apiConfig.userServiceApi),
+    );
+
     const server = this._express.listen(this._apiConfig.port, () => {
       console.log('Running on', this._apiConfig.port);
     });
@@ -45,6 +52,7 @@ export default class App {
       this._apiConfig,
       this._docsManager,
       wss,
+      accessTokenVerifier,
     );
 
     server.on(HTTP_UPGRADE_EVENT, upgradeHandler.upgrade);
