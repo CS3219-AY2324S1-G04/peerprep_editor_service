@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link RoomServiceMqConfig}.
+ */
 import { RoomServiceMqConsumerConfig } from '../services/room_service_mq_consumer';
 
 const userEnv = 'MQ_USER';

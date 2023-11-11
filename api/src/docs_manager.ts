@@ -46,8 +46,8 @@ export default class DocsManager {
     await redisAwareness.connect();
 
     this._redisDocsService.subscribeToRoomDeletion(roomId, () => {
-      this.removeDoc(roomId);
-      this._redisPersistence.clearDocument(roomId);
+      this._removeDoc(roomId);
+      this._redisPersistence.closeDoc(roomId);
     });
 
     this._wssDocs.set(roomId, wssDoc);
@@ -68,7 +68,7 @@ export default class DocsManager {
     return doc;
   }
 
-  public removeDoc(roomId: string): void {
+  private _removeDoc(roomId: string): void {
     const doc = this._wssDocs.get(roomId);
     doc?.destroy();
     this._wssDocs.delete(roomId);

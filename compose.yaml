@@ -14,13 +14,14 @@ services:
     networks:
       - peerprep
     depends_on:
-      - editor_service_docs
       - editor_service_redis
     restart: unless-stopped
 
   editor_service_docs:
     build: ./docs
     environment:
+      PORT: ${EDITOR_DOCS_PORT}
+      DOCS_SERVICE_ROUTE: ${DOCS_SERVICE_ROUTE}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_HOST: 'editor_service_redis'
       QUESTION_SERVICE_API: 'http://question_service_api:9001/question-service'
@@ -29,8 +30,11 @@ services:
       MQ_HOST: 'room_service_mq'
       MQ_EXCHANGE_NAME: ${MQ_EXCHANGE_NAME}
       MQ_QUEUE_NAME: ${MQ_QUEUE_NAME}
+      NODE_ENV: ${NODE_ENV}
     networks:
       - peerprep
+    ports:
+      - '${EDITOR_DOCS_PORT}:${EDITOR_DOCS_PORT}'
     depends_on:
       - editor_service_redis
     restart: unless-stopped
