@@ -6,7 +6,6 @@ import WebSocket from 'ws';
 
 import EditorApiConfig from '../configs/editor_api_config';
 import DocsManager from '../docs_manager';
-import { getRoom } from '../service/room_service';
 import ConnectionHandler from './connection_handler';
 
 export default class RoomConnectionHandler extends ConnectionHandler {
@@ -41,7 +40,7 @@ export default class RoomConnectionHandler extends ConnectionHandler {
 
       doc.registerConn(conn);
     } catch (error) {
-      console.log('Unable to upgrade connection!', error);
+      console.log('Unable to setup connection!', error);
       conn.close();
     }
 

@@ -1,6 +1,8 @@
 /**
  * @file Manages docs.
  */
+import { RedisPersistence } from 'y-redis';
+
 import EditorApiConfig from './configs/editor_api_config';
 import { getQuestion } from './service/question_service';
 import { getRoom } from './service/room_service';
@@ -13,6 +15,7 @@ export default class DocsManager {
   private _wsDocs: Map<string, WSSharedDoc>;
   private _gcEnabled: boolean;
   private _editorApiConfig: EditorApiConfig;
+  private _redisPersistence: RedisPersistence;
 
   public constructor(
     editorApiConfig: EditorApiConfig,
@@ -21,6 +24,7 @@ export default class DocsManager {
     this._editorApiConfig = editorApiConfig;
     this._wsDocs = new Map();
     this._gcEnabled = gcEnabled;
+    this._redisPersistence = new RedisPersistence();
   }
 
   public async setupDocIfNotExist(
@@ -82,11 +86,16 @@ export default class DocsManager {
   }
 
   private _createDoc(roomId: string, data: string = '') {
-    const doc = new WSSharedDoc(roomId, gcEnabled, data);
-    doc.gc = this._gcEnabled;
+    const wssDoc = new WSSharedDoc(
+      roomId,
+      gcEnabled,
+      '',
+      this._redisPersistence,
+    );
+    wssDoc.gc = this._gcEnabled;
 
-    this._wsDocs.set(roomId, doc);
+    this._wsDocs.set(roomId, wssDoc);
 
-    return doc;
+    return wssDoc;
   }
 }
