@@ -5,27 +5,34 @@ import express from 'express';
 import WebSocket from 'ws';
 
 import EditorApiConfig from './configs/editor_api_config';
-import DocsManager from './docs_manager';
-import RoomConnectionHandler from './handlers/room_connection_handler';
-import RoomUpgradeHandler from './handlers/room_upgrade_handler';
+import ConnectionHandler from './handlers/connection_handler';
+import UpgradeHandler from './handlers/upgrade_handler';
 
 const HTTP_UPGRADE_EVENT = 'upgrade';
 const WSS_CONNECTION_EVENT = 'connection';
+
 export default class App {
   private _apiConfig: EditorApiConfig;
   private _express;
-  private _docsManager: DocsManager;
+  private _connectionHandler: ConnectionHandler;
+  private _upgradeHandler: UpgradeHandler;
 
-  public constructor(apiConfig: EditorApiConfig) {
+  public constructor(
+    apiConfig: EditorApiConfig,
+    connectionHandler: ConnectionHandler,
+    upgradeHandler: UpgradeHandler,
+  ) {
+    // Use express for rest calls between client and editor service.
     this._express = express();
     this._apiConfig = apiConfig;
-    this._docsManager = new DocsManager(apiConfig);
+    this._connectionHandler = connectionHandler;
+    this._upgradeHandler = upgradeHandler;
   }
 
   /**
    * Starts the server.
    */
-  public start(): void {
+  public async start(): Promise<void> {
     const server = this._express.listen(this._apiConfig.port, () => {
       console.log('Running on', this._apiConfig.port);
     });
@@ -36,18 +43,7 @@ export default class App {
       path: route,
     });
 
-    const connectionHandler = new RoomConnectionHandler(
-      this._apiConfig,
-      this._docsManager,
-    );
-
-    const upgradeHandler = new RoomUpgradeHandler(
-      this._apiConfig,
-      this._docsManager,
-      wss,
-    );
-
-    server.on(HTTP_UPGRADE_EVENT, upgradeHandler.upgrade);
-    wss.on(WSS_CONNECTION_EVENT, connectionHandler.handle);
+    server.on(HTTP_UPGRADE_EVENT, this._upgradeHandler.getHandler(wss));
+    wss.on(WSS_CONNECTION_EVENT, this._connectionHandler.handle);
   }
 }

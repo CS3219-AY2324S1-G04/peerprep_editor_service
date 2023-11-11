@@ -8,74 +8,89 @@ import WebSocket from 'ws';
 
 import EditorApiConfig from '../configs/editor_api_config';
 import DocsManager from '../docs_manager';
-import { getRoom, getUserRoomInfo } from '../service/room_service';
+import AccessTokenVerifier, {
+  UserProfile,
+} from '../service/access_token_verifier';
+import { getRoom } from '../service/room_service';
 import UpgradeHandler from './upgrade_handler';
 
 export default class RoomUpgradeHandler extends UpgradeHandler {
   private _docsManager: DocsManager;
   private _apiConfig: EditorApiConfig;
-  private _wss: WebSocket.Server;
+  private _accessTokenVerifier: AccessTokenVerifier;
 
   public constructor(
     editorApiConfig: EditorApiConfig,
     docsManager: DocsManager,
-    wss: WebSocket.Server,
+    accessTokenVerifier: AccessTokenVerifier,
   ) {
     super();
     this._apiConfig = editorApiConfig;
     this._docsManager = docsManager;
-    this._wss = wss;
+    this._accessTokenVerifier = accessTokenVerifier;
   }
 
-  public override get upgrade() {
-    return (request: IncomingMessage, socket: Duplex, head: Buffer) => {
-      this._upgradeConnection(request, socket, head);
+  public override getHandler(
+    wss: WebSocket.Server,
+  ): (request: IncomingMessage, socket: Duplex, head: Buffer) => Promise<void> {
+    return async (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+      // Check room status.
+      try {
+        const userProfile = this._authenticateReq(request);
+        const roomId = await this._getUserRoomId(request, userProfile);
+
+        await this._prepareRoomDoc(roomId);
+
+        const handleAuth = (client: WebSocket) => {
+          console.log('handle auth');
+          wss.emit('connection', client, request);
+        };
+
+        wss.handleUpgrade(request, socket, head, handleAuth);
+      } catch (error) {
+        console.error('Reject connection', request.url, error);
+        socket.destroy();
+      }
     };
   }
 
-  private async _upgradeConnection(
-    request: IncomingMessage,
-    socket: Duplex,
-    head: Buffer,
-  ) {
-    // Check room status.
-    try {
-      if (!request.headers?.cookie) {
-        throw new Error('Not authorized');
-      }
-
-      const sessionToken = cookie.parse(request.headers.cookie)[
-        'session-token'
-      ];
-
-      if (!sessionToken) {
-        throw new Error('Not authorized');
-      }
-
-      if (!request.url) {
-        throw new Error('Invalid url!');
-      }
-
-      const roomId = this._parseUrlForRoomId(request.url);
-
-      const room = await getRoom(this._apiConfig.roomServiceApi, roomId);
-
-      if (!room || room.roomId !== roomId) {
-        throw new Error('Room not found!');
-      }
-
-      await this._docsManager.getDoc(roomId);
-
-      const handleAuth = (client: WebSocket) => {
-        console.log('handle auth');
-        this._wss.emit('connection', client, request);
-      };
-
-      this._wss.handleUpgrade(request, socket, head, handleAuth);
-    } catch (error) {
-      console.log('Reject connection', request.url, error);
-      socket.destroy();
+  private async _prepareRoomDoc(roomId: string) {
+    if (!this._docsManager.hasDoc(roomId)) {
+      await this._docsManager.setupDoc(roomId);
     }
+  }
+
+  private _authenticateReq(request: IncomingMessage) {
+    if (!request.headers?.cookie) {
+      throw new Error('Invalid upgrade request');
+    }
+
+    const accessToken = cookie.parse(request.headers.cookie)['access-token'];
+    const userProfile = this._accessTokenVerifier.verify(accessToken);
+
+    if (!userProfile) {
+      throw new Error();
+    }
+
+    return userProfile;
+  }
+
+  private async _getUserRoomId(
+    request: IncomingMessage,
+    userProfile: UserProfile,
+  ) {
+    if (!request.url) {
+      throw new Error('Invalid request');
+    }
+
+    const roomId = this._parseUrlForRoomId(request.url);
+    const room = await getRoom(this._apiConfig.roomServiceApi, roomId);
+
+    if (!room || !room.userIds.includes(userProfile.userId)) {
+      throw new Error('Invalid room!');
+    }
+
+    return roomId;
   }
 
   private _parseUrlForRoomId(url: string) {

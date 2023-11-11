@@ -1,92 +1,82 @@
 /**
  * @file Manages docs.
  */
-import EditorApiConfig from './configs/editor_api_config';
-import { getQuestion } from './service/question_service';
-import { getRoom } from './service/room_service';
+import { RedisPersistence } from 'y-redis';
+
+import RedisAwareness from './service/redis_awareness';
+import RedisClient from './service/redis_client';
+import RedisDocsService from './service/redis_docs_service';
 import WSSharedDoc from './ws_shared_doc';
 
 // disable gc when using snapshots!
 const gcEnabled = process.env.GC !== 'false' && process.env.GC !== '0';
 
 export default class DocsManager {
-  private _docs: Map<string, WSSharedDoc>;
-  private _gcEnabled: boolean;
-  private _editorApiConfig: EditorApiConfig;
+  private _wssDocs: Map<string, WSSharedDoc>;
+  private _redisClient: RedisClient;
+  private _redisPersistence: RedisPersistence;
+  private _redisDocsService: RedisDocsService;
 
   public constructor(
-    editorApiConfig: EditorApiConfig,
-    gcEnabled: boolean = true,
+    redisClient: RedisClient,
+    redisPersistence: RedisPersistence,
+    redisDocsService: RedisDocsService,
   ) {
-    this._editorApiConfig = editorApiConfig;
-    this._docs = new Map();
-    this._gcEnabled = gcEnabled;
+    this._wssDocs = new Map();
+    this._redisClient = redisClient;
+    this._redisPersistence = redisPersistence;
+    this._redisDocsService = redisDocsService;
   }
 
-  public get docs() {
-    return this._docs;
-  }
-
-  // Lazy get doc. Setup doc if it doesn't exist yet.
-  public async getDoc(roomId: string) {
-    if (this._docs.has(roomId)) {
-      return this._docs.get(roomId);
-    } else {
-      const newDoc = await this._setupDoc(roomId);
-      this._docs.set(roomId, newDoc);
-      return newDoc;
-    }
-  }
-
-  public removeDoc(roomId: string) {
-    this._docs.delete(roomId);
-  }
-
-  private async _setupDoc(roomId: string) {
-    let data: string;
-
-    try {
-      const room = await getRoom(this._editorApiConfig.roomServiceApi, roomId);
-
-      if (room == undefined) {
-        throw new Error('Room not found! Ignoring template.');
-      }
-
-      console.log('Getting question', room.questionId, room.roomId);
-      const question = await getQuestion(
-        this._editorApiConfig.questionServiceApi,
-        room.questionId,
-      );
-
-      if (question == undefined) {
-        throw new Error('Question not found! Ignoring template.');
-      }
-
-      const template = question.templates.find((t) => {
-        return t.langSlug === room.langSlug;
-      });
-
-      if (template == undefined) {
-        throw new Error('Template not found! Ignoring template.');
-      }
-
-      console.log('Using template', template);
-
-      data = template.code;
-    } catch (error) {
-      console.log('No template! ', error);
-      data = '';
+  public async setupDoc(roomId: string): Promise<WSSharedDoc> {
+    if (this.hasDoc(roomId)) {
+      throw new Error('Doc already exists! ' + roomId);
     }
 
-    return this._createDoc(roomId, data);
+    const wssDoc = this._createWssDoc(roomId);
+
+    this._redisPersistence.bindState(roomId, wssDoc);
+
+    const redisAwareness = new RedisAwareness(
+      this._redisClient,
+      roomId,
+      wssDoc.awareness,
+    );
+
+    await redisAwareness.connect();
+
+    this._redisDocsService.subscribeToRoomDeletion(roomId, () => {
+      this.removeDoc(roomId);
+      this._redisPersistence.clearDocument(roomId);
+    });
+
+    this._wssDocs.set(roomId, wssDoc);
+    return wssDoc;
   }
 
-  private _createDoc(roomId: string, data: string = '') {
-    const doc = new WSSharedDoc(roomId, gcEnabled, data);
-    doc.gc = this._gcEnabled;
+  public hasDoc(roomId: string) {
+    return this._wssDocs.has(roomId);
+  }
 
-    this._docs.set(roomId, doc);
+  public getDoc(roomId: string): WSSharedDoc {
+    const doc = this._wssDocs.get(roomId);
+
+    if (!doc) {
+      throw new Error('Doc does not exist!');
+    }
 
     return doc;
+  }
+
+  public removeDoc(roomId: string): void {
+    const doc = this._wssDocs.get(roomId);
+    doc?.destroy();
+    this._wssDocs.delete(roomId);
+  }
+
+  private _createWssDoc(roomId: string) {
+    const wssDoc = new WSSharedDoc(roomId, gcEnabled);
+    this._wssDocs.set(roomId, wssDoc);
+    return wssDoc;
   }
 }

@@ -4,14 +4,44 @@ services:
     environment:
       PORT: ${EDITOR_SERVICE_PORT}
       SERVICE_ROUTE: ${SERVICE_ROUTE}
+      USER_SERVICE_API: 'http://user_service_api:9000/user-service'
       ROOM_SERVICE_API: 'http://room_service_api:9003/room-service'
       QUESTION_SERVICE_API: 'http://question_service_api:9001/question-service'
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_HOST: 'editor_service_redis'
     ports:
-      - "${EDITOR_SERVICE_PORT}:9004"
+      - '${EDITOR_SERVICE_PORT}:9004'
+    networks:
+      - peerprep
+    depends_on:
+      - editor_service_docs
+      - editor_service_redis
+    restart: unless-stopped
+
+  editor_service_docs:
+    build: ./docs
+    environment:
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_HOST: 'editor_service_redis'
+      QUESTION_SERVICE_API: 'http://question_service_api:9001/question-service'
+      MQ_USER: ${MQ_USER}
+      MQ_PASSWORD: ${MQ_PASSWORD}
+      MQ_HOST: 'room_service_mq'
+      MQ_EXCHANGE_NAME: ${MQ_EXCHANGE_NAME}
+      MQ_QUEUE_NAME: ${MQ_QUEUE_NAME}
+    networks:
+      - peerprep
+    depends_on:
+      - editor_service_redis
+    restart: unless-stopped
+
+  editor_service_redis:
+    image: redis:latest
+    ports:
+      - '${REDIS_PORT}:${REDIS_DOCKER_PORT}'
     networks:
       - peerprep
     restart: unless-stopped
-
 
 networks:
   peerprep:

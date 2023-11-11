@@ -13,8 +13,8 @@ import awarenessProtocol, { Awareness } from 'y-protocols/awareness';
 import syncProtocol from 'y-protocols/sync';
 import Y from 'yjs';
 
-import { MessageType } from '../enums/message_type';
-import SocketMessageHandler from './socket_handlers/socket_message_handler';
+import { MessageType } from './enums/message_type';
+import SocketMessageHandler from './handlers/socket_handlers/socket_message_handler';
 
 const wsReadyStateConnecting = 0;
 const wsReadyStateOpen = 1;
@@ -75,7 +75,7 @@ export default class UserConnection {
     const encoder = createEncoder();
     writeVarUint(encoder, MessageType.messageSync);
 
-    console.log('sync step 1');
+    console.log('Send sync step 1');
 
     syncProtocol.writeSyncStep1(encoder, yDoc);
 
@@ -100,9 +100,11 @@ export default class UserConnection {
   }
 
   private _registerHandlers() {
+    console.log('register handlers');
     this._socket.on('message', (data: ArrayBuffer) => {
       const message = new Uint8Array(data);
       const decoder = createDecoder(message);
+
       const messageType: MessageType = readVarUint(decoder);
 
       if (messageType in this._messageHandlers) {

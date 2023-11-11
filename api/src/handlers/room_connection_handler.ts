@@ -4,21 +4,14 @@
 import { Request } from 'express';
 import WebSocket from 'ws';
 
-import EditorApiConfig from '../configs/editor_api_config';
 import DocsManager from '../docs_manager';
-import { getRoom } from '../service/room_service';
 import ConnectionHandler from './connection_handler';
 
 export default class RoomConnectionHandler extends ConnectionHandler {
   private _docsManager: DocsManager;
-  private _apiConfig: EditorApiConfig;
 
-  public constructor(
-    editorApiConfig: EditorApiConfig,
-    docsManager: DocsManager,
-  ) {
+  public constructor(docsManager: DocsManager) {
     super();
-    this._apiConfig = editorApiConfig;
     this._docsManager = docsManager;
   }
 
@@ -29,17 +22,11 @@ export default class RoomConnectionHandler extends ConnectionHandler {
   }
 
   private async _setupConnection(conn: WebSocket, req: Request) {
-    console.log('connection');
+    console.log('\n Setup connection');
 
     try {
       const roomId = this._parseUrlForRoomId(req.url);
-      const room = await getRoom(this._apiConfig.roomServiceApi, roomId);
-
-      if (room == null) {
-        throw new Error(`Room does not exist! ${roomId}`);
-      }
-
-      const doc = await this._docsManager.getDoc(roomId);
+      const doc = this._docsManager.getDoc(roomId);
 
       if (doc == null) {
         throw new Error(`Unable to get doc! ${roomId}`);
@@ -47,9 +34,11 @@ export default class RoomConnectionHandler extends ConnectionHandler {
 
       doc.registerConn(conn);
     } catch (error) {
-      console.log('Unable to upgrade connection!', error);
+      console.log('Unable to setup connection!', error);
       conn.close();
     }
+
+    console.log('Setup connection complete');
   }
 
   private _parseUrlForRoomId(url: string) {

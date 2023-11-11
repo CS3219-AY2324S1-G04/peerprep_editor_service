@@ -1,5 +1,5 @@
 /**
- * @file Representation of shared doc using websocket.
+ * @file Handles syncing of updates from client.
  */
 import {
   createEncoder,
@@ -17,7 +17,8 @@ import Y from 'yjs';
 import { callbackHandler, isCallbackSet } from './callback';
 import AwarenessMessageHandler from './handlers/socket_handlers/awareness_message_handler';
 import SyncMessageHandler from './handlers/socket_handlers/sync_message_handler';
-import UserConnection from './handlers/user_connection';
+import AwarenessUpdate from './interfaces/awareness_update';
+import UserConnection from './user_connection';
 
 const messageSync = 0;
 const messageAwareness = 1;
@@ -30,33 +31,23 @@ const CALLBACK_DEBOUNCE_MAXWAIT = process.env.CALLBACK_DEBOUNCE_MAXWAIT
   ? parseInt(process.env.CALLBACK_DEBOUNCE_MAXWAIT)
   : 10000;
 
-interface AwarenessUpdate {
-  added: number[];
-  updated: number[];
-  removed: number[];
-}
-
 export default class WSSharedDoc extends Y.Doc {
   private _roomId: string;
   private _conns: Map<UserConnection, Set<number>>;
   private _awareness: Awareness;
 
-  public constructor(roomId: string, gcEnabled: boolean, data?: string) {
+  public constructor(roomId: string, gcEnabled: boolean = true) {
     super({ gc: gcEnabled });
 
     this._roomId = roomId;
     this._conns = new Map();
+
     this._awareness = new Awareness(this);
 
     this._awareness.on('update', this._onAwarenessUpdate);
-    this.on('update', this._onUpdate);
-
     this._awareness.setLocalState(null);
 
-    // Set initial doc text.
-    if (data != null) {
-      this.getText().insert(0, data);
-    }
+    this.on('update', this._broadcastUpdate);
 
     if (isCallbackSet) {
       this.on(
@@ -70,6 +61,10 @@ export default class WSSharedDoc extends Y.Doc {
 
   public get roomId() {
     return this._roomId;
+  }
+
+  public get awareness() {
+    return this._awareness;
   }
 
   public registerConn(socket: WebSocket) {
@@ -92,18 +87,27 @@ export default class WSSharedDoc extends Y.Doc {
     this._conns.forEach((_, conn) => conn.send(message));
   }
 
+  public override destroy() {
+    super.destroy();
+
+    this._conns.forEach((_, conn) => {
+      conn.close();
+    });
+
+    this._awareness.destroy();
+  }
+
   private _onConnectionClose(conn: UserConnection) {
-    const controlledIds = this._conns.get(conn);
+    const awarenessIds = this._conns.get(conn);
 
     this._conns.delete(conn);
 
     awarenessProtocol.removeAwarenessStates(
       this._awareness,
-      Array.from(controlledIds != null ? controlledIds : []),
+      Array.from(awarenessIds != null ? awarenessIds : []),
       null,
     );
 
-    // TODO: Handle persistence.
     if (this._conns.size === 0) {
       console.log('No more connections!', this._roomId);
     }
@@ -111,12 +115,12 @@ export default class WSSharedDoc extends Y.Doc {
 
   private _onAwarenessUpdate = (
     { added, updated, removed }: AwarenessUpdate,
-    userConn: UserConnection,
+    originUserConn: UserConnection,
   ) => {
     const changedClients = added.concat(updated, removed);
 
-    if (userConn !== null) {
-      const awarenessIds = this._conns.get(userConn);
+    if (originUserConn !== null) {
+      const awarenessIds = this._conns.get(originUserConn);
 
       if (awarenessIds !== undefined) {
         added.forEach((clientID) => {
@@ -129,7 +133,20 @@ export default class WSSharedDoc extends Y.Doc {
       }
     }
 
-    // Broadcast awareness update
+    this._broadcastAwarenessUpdate(changedClients);
+  };
+
+  private _broadcastUpdate = (update: Uint8Array) => {
+    const encoder = createEncoder();
+
+    writeVarUint(encoder, messageSync);
+    syncProtocol.writeUpdate(encoder, update);
+    const message = toUint8Array(encoder);
+
+    this.broadcastMessage(message);
+  };
+
+  private _broadcastAwarenessUpdate(changedClients: number[]) {
     const encoder = createEncoder();
     writeVarUint(encoder, messageAwareness);
     writeVarUint8Array(
@@ -139,21 +156,5 @@ export default class WSSharedDoc extends Y.Doc {
 
     const buff = toUint8Array(encoder);
     this.broadcastMessage(buff);
-  };
-
-  private _onUpdate = (
-    update: Uint8Array,
-    origin: unknown,
-    doc: WSSharedDoc,
-  ) => {
-    const encoder = createEncoder();
-
-    writeVarUint(encoder, messageSync);
-    syncProtocol.writeUpdate(encoder, update);
-
-    const message = toUint8Array(encoder);
-
-    // Broadcast update.
-    doc.broadcastMessage(message);
-  };
+  }
 }

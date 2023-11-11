@@ -3,11 +3,10 @@
  */
 import { IncomingMessage } from 'http';
 import { Duplex } from 'stream';
+import WebSocket from 'ws';
 
 export default abstract class UpgradeHandler {
-  public abstract get upgrade(): (
-    request: IncomingMessage,
-    socket: Duplex,
-    head: Buffer,
-  ) => void;
+  public abstract getHandler(
+    wss: WebSocket.Server,
+  ): (request: IncomingMessage, socket: Duplex, head: Buffer) => Promise<void>;
 }

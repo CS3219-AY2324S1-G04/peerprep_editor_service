@@ -5,7 +5,7 @@ import { Decoder, readVarUint8Array } from 'lib0/decoding';
 import awarenessProtocol, { Awareness } from 'y-protocols/awareness';
 
 import { MessageType } from '../../enums/message_type';
-import UserConnection from '../user_connection';
+import UserConnection from '../../user_connection';
 import SocketMessageHandler from './socket_message_handler';
 
 export default class AwarenessMessageHandler extends SocketMessageHandler {
