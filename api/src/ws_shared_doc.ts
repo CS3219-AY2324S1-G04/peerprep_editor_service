@@ -12,14 +12,12 @@ import WebSocket from 'ws';
 import { Awareness, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import awarenessProtocol from 'y-protocols/awareness';
 import syncProtocol from 'y-protocols/sync';
-import { RedisPersistence } from 'y-redis';
 import Y from 'yjs';
 
 import { callbackHandler, isCallbackSet } from './callback';
 import AwarenessMessageHandler from './handlers/socket_handlers/awareness_message_handler';
 import SyncMessageHandler from './handlers/socket_handlers/sync_message_handler';
 import AwarenessUpdate from './interfaces/awareness_update';
-import RedisAwareness from './service/redis_awareness';
 import UserConnection from './user_connection';
 
 const messageSync = 0;
@@ -37,30 +35,19 @@ export default class WSSharedDoc extends Y.Doc {
   private _roomId: string;
   private _conns: Map<UserConnection, Set<number>>;
   private _awareness: Awareness;
-  private _persistence: RedisPersistence | undefined;
-  private _redisAwareness: RedisAwareness | undefined;
 
-  public constructor(
-    roomId: string,
-    gcEnabled: boolean,
-    data?: string,
-    persistence?: RedisPersistence,
-  ) {
+  public constructor(roomId: string, gcEnabled: boolean = true) {
     super({ gc: gcEnabled });
 
     this._roomId = roomId;
     this._conns = new Map();
+
     this._awareness = new Awareness(this);
 
     this._awareness.on('update', this._onAwarenessUpdate);
     this._awareness.setLocalState(null);
 
     this.on('update', this._broadcastUpdate);
-
-    // Set initial doc text.
-    if (data != null) {
-      this.getText().insert(0, data);
-    }
 
     if (isCallbackSet) {
       this.on(
@@ -70,17 +57,14 @@ export default class WSSharedDoc extends Y.Doc {
         }),
       );
     }
-
-    if (persistence) {
-      this._persistence = persistence;
-      this._persistence.bindState(roomId, this);
-      this._redisAwareness = new RedisAwareness(roomId, this._awareness);
-      this._redisAwareness.connect();
-    }
   }
 
   public get roomId() {
     return this._roomId;
+  }
+
+  public get awareness() {
+    return this._awareness;
   }
 
   public registerConn(socket: WebSocket) {
@@ -111,7 +95,6 @@ export default class WSSharedDoc extends Y.Doc {
     });
 
     this._awareness.destroy();
-    this._persistence?.clearDocument(this._roomId);
   }
 
   private _onConnectionClose(conn: UserConnection) {

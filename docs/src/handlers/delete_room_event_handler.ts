@@ -1,22 +1,18 @@
-import { Redis } from 'ioredis';
 import { RedisPersistence } from 'y-redis';
 
-import EditorDocsConfig from '../configs/editor_docs_config';
+import RedisClient from '../services/redis_client';
 import { EventType, RoomEvent } from '../services/room_service_mq_consumer';
 import RoomEventHandler from './room_event_handler';
 
 const DELETE_CHANNEL = 'delete';
 
 export default class DeleteRoomEventHandler extends RoomEventHandler {
+  private _redisClient: RedisClient;
   private _persistence: RedisPersistence;
-  private _editorDocsConfig: EditorDocsConfig;
 
-  public constructor(
-    editorDocsConfig: EditorDocsConfig,
-    persistence: RedisPersistence,
-  ) {
+  public constructor(redisClient: RedisClient, persistence: RedisPersistence) {
     super();
-    this._editorDocsConfig = editorDocsConfig;
+    this._redisClient = redisClient;
     this._persistence = persistence;
   }
 
@@ -30,7 +26,8 @@ export default class DeleteRoomEventHandler extends RoomEventHandler {
       const room = roomEvent.room;
       await this._persistence.clearDocument(room.roomId);
 
-      new Redis().publish(`${room.roomId}:${DELETE_CHANNEL}`, room.roomId);
+      const redis = this._redisClient.createInstance();
+      redis.publish(`${room.roomId}:${DELETE_CHANNEL}`, room.roomId);
     };
   }
 }

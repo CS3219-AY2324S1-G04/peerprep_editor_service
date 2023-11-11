@@ -3,31 +3,29 @@
  */
 import { RedisPersistence } from 'y-redis';
 
-import EditorApiConfig from './configs/editor_api_config';
-import DocsService from './service/docs_service';
+import RedisAwareness from './service/redis_awareness';
+import RedisClient from './service/redis_client';
+import RedisDocsService from './service/redis_docs_service';
 import WSSharedDoc from './ws_shared_doc';
 
 // disable gc when using snapshots!
 const gcEnabled = process.env.GC !== 'false' && process.env.GC !== '0';
 
 export default class DocsManager {
-  private _wsDocs: Map<string, WSSharedDoc>;
-  private _gcEnabled: boolean;
-  private _editorApiConfig: EditorApiConfig;
+  private _wssDocs: Map<string, WSSharedDoc>;
+  private _redisClient: RedisClient;
   private _redisPersistence: RedisPersistence;
-  private _docsService: DocsService;
+  private _redisDocsService: RedisDocsService;
 
   public constructor(
-    editorApiConfig: EditorApiConfig,
-    gcEnabled: boolean = true,
+    redisClient: RedisClient,
+    redisPersistence: RedisPersistence,
+    redisDocsService: RedisDocsService,
   ) {
-    this._editorApiConfig = editorApiConfig;
-    this._wsDocs = new Map();
-    this._gcEnabled = gcEnabled;
-
-    // TODO: Inject dependencies instead.
-    this._redisPersistence = new RedisPersistence();
-    this._docsService = new DocsService();
+    this._wssDocs = new Map();
+    this._redisClient = redisClient;
+    this._redisPersistence = redisPersistence;
+    this._redisDocsService = redisDocsService;
   }
 
   public async setupDoc(roomId: string): Promise<WSSharedDoc> {
@@ -35,21 +33,32 @@ export default class DocsManager {
       throw new Error('Doc already exists! ' + roomId);
     }
 
-    const newDoc = this._createDoc(roomId);
-    this._wsDocs.set(roomId, newDoc);
+    const wssDoc = this._createWssDoc(roomId);
 
-    this._docsService.subscribeToRoomDeletion(roomId, () => {
+    this._redisDocsService.subscribeToRoomDeletion(roomId, () => {
       this.removeDoc(roomId);
     });
-    return newDoc;
+
+    this._redisPersistence.bindState(roomId, wssDoc);
+
+    const redisAwareness = new RedisAwareness(
+      this._redisClient,
+      roomId,
+      wssDoc.awareness,
+    );
+
+    await redisAwareness.connect();
+
+    this._wssDocs.set(roomId, wssDoc);
+    return wssDoc;
   }
 
   public hasDoc(roomId: string) {
-    return this._wsDocs.has(roomId);
+    return this._wssDocs.has(roomId);
   }
 
   public getDoc(roomId: string): WSSharedDoc {
-    const doc = this._wsDocs.get(roomId);
+    const doc = this._wssDocs.get(roomId);
 
     if (!doc) {
       throw new Error('Doc does not exist!');
@@ -59,22 +68,14 @@ export default class DocsManager {
   }
 
   public removeDoc(roomId: string): void {
-    const doc = this._wsDocs.get(roomId);
+    const doc = this._wssDocs.get(roomId);
     doc?.destroy();
-    this._wsDocs.delete(roomId);
+    this._wssDocs.delete(roomId);
   }
 
-  private _createDoc(roomId: string) {
-    const wssDoc = new WSSharedDoc(
-      roomId,
-      gcEnabled,
-      '',
-      this._redisPersistence,
-    );
-
-    wssDoc.gc = this._gcEnabled;
-    this._wsDocs.set(roomId, wssDoc);
-
+  private _createWssDoc(roomId: string) {
+    const wssDoc = new WSSharedDoc(roomId, gcEnabled);
+    this._wssDocs.set(roomId, wssDoc);
     return wssDoc;
   }
 }

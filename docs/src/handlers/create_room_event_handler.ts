@@ -32,6 +32,8 @@ export default class CreateRoomEventHandler extends RoomEventHandler {
       console.log('create room', roomEvent);
       const yDoc = new Y.Doc();
       const room = roomEvent.room;
+
+      // TODO: Allow only only one instance of editor docs to setup doc.
       await this._setupDoc(room, yDoc);
       this._persistence.bindState(room.roomId, yDoc);
     };

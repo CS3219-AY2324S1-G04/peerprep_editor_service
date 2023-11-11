@@ -4,20 +4,14 @@
 import { Request } from 'express';
 import WebSocket from 'ws';
 
-import EditorApiConfig from '../configs/editor_api_config';
 import DocsManager from '../docs_manager';
 import ConnectionHandler from './connection_handler';
 
 export default class RoomConnectionHandler extends ConnectionHandler {
   private _docsManager: DocsManager;
-  private _apiConfig: EditorApiConfig;
 
-  public constructor(
-    editorApiConfig: EditorApiConfig,
-    docsManager: DocsManager,
-  ) {
+  public constructor(docsManager: DocsManager) {
     super();
-    this._apiConfig = editorApiConfig;
     this._docsManager = docsManager;
   }
 

@@ -5,6 +5,7 @@ import awarenessProtocol, {
 } from 'y-protocols/awareness';
 
 import AwarenessUpdate from '../interfaces/awareness_update';
+import RedisClient from './redis_client';
 
 export default class RedisAwareness {
   private _roomId: string;
@@ -12,10 +13,14 @@ export default class RedisAwareness {
   private _redisPub: Redis;
   private _awareness: Awareness;
 
-  public constructor(roomId: string, awareness: Awareness) {
+  public constructor(
+    redisClient: RedisClient,
+    roomId: string,
+    awareness: Awareness,
+  ) {
     this._roomId = roomId;
-    this._redisSub = new Redis();
-    this._redisPub = new Redis();
+    this._redisSub = redisClient.createInstance();
+    this._redisPub = redisClient.createInstance();
     this._awareness = awareness;
   }
 
