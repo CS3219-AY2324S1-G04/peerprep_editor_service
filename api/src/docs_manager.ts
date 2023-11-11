@@ -35,10 +35,6 @@ export default class DocsManager {
 
     const wssDoc = this._createWssDoc(roomId);
 
-    this._redisDocsService.subscribeToRoomDeletion(roomId, () => {
-      this.removeDoc(roomId);
-    });
-
     this._redisPersistence.bindState(roomId, wssDoc);
 
     const redisAwareness = new RedisAwareness(
@@ -48,6 +44,11 @@ export default class DocsManager {
     );
 
     await redisAwareness.connect();
+
+    this._redisDocsService.subscribeToRoomDeletion(roomId, () => {
+      this.removeDoc(roomId);
+      this._redisPersistence.clearDocument(roomId);
+    });
 
     this._wssDocs.set(roomId, wssDoc);
     return wssDoc;

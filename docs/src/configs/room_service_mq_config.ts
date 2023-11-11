@@ -1,5 +1,12 @@
 import { RoomServiceMqConsumerConfig } from '../services/room_service_mq_consumer';
 
+const userEnv = 'MQ_USER';
+const passEnv = 'MQ_PASSWORD';
+const hostEnv = 'MQ_HOST';
+const portEnv = 'MQ_PORT';
+const exchangeEnv = 'MQ_EXCHANGE_NAME';
+const queueEnv = 'MQ_QUEUE_NAME';
+
 const defaultUser = 'user';
 const defaultPassword = 'P@ssword123';
 const defaultHost = 'localhost';
@@ -20,18 +27,18 @@ export default class RoomServiceMqConfig
   public readonly queueName: string;
 
   public constructor(env: NodeJS.ProcessEnv = process.env) {
-    // TODO: Use env variables.
-    this.user = defaultUser;
-    this.password = defaultPassword;
-    this.host = defaultHost;
-    this.port = defaultPort;
+    this.user = env[userEnv] ?? defaultUser;
+    this.password = env[passEnv] ?? defaultPassword;
+    this.host = env[hostEnv] ?? defaultHost;
+    this.port = this._parseInt(env[portEnv]) ?? defaultPort;
+    this.exchangeName = env[exchangeEnv] ?? defaultExchangeName;
+    this.queueName = env[queueEnv] ?? defaultQueueName;
+
     this.vhost = '';
     this.shouldUseTls = false;
-    this.exchangeName = defaultExchangeName;
-    this.queueName = defaultQueueName;
   }
 
-  private static _parseInt(v: string | undefined): number | undefined {
+  private _parseInt(v: string | undefined): number | undefined {
     if (v === undefined) {
       return undefined;
     }

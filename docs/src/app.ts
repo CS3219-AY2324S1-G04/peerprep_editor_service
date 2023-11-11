@@ -14,6 +14,10 @@ export default class App {
    * Starts the server.
    */
   public async start(): Promise<void> {
-    await this._roomServiceMq.connect();
+    try {
+      await this._roomServiceMq.connect();
+    } catch (error) {
+      console.error('Failed to initialize editor docs service!', error);
+    }
   }
 }
