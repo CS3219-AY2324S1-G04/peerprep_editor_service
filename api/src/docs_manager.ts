@@ -4,8 +4,6 @@
 import { RedisPersistence } from 'y-redis';
 
 import EditorApiConfig from './configs/editor_api_config';
-import { getQuestion } from './service/question_service';
-import { getRoom } from './service/room_service';
 import WSSharedDoc from './ws_shared_doc';
 
 // disable gc when using snapshots!
@@ -34,7 +32,7 @@ export default class DocsManager {
       return this._wsDocs.get(roomId);
     }
 
-    const newDoc = await this._setupDoc(roomId);
+    const newDoc = this._createDoc(roomId);
     this._wsDocs.set(roomId, newDoc);
     return newDoc;
   }
@@ -46,46 +44,7 @@ export default class DocsManager {
   public removeDoc(roomId: string): void {
     this._wsDocs.delete(roomId);
   }
-
-  private async _setupDoc(roomId: string) {
-    let data: string;
-
-    try {
-      data = await this._getTemplateForRoom(roomId);
-      console.log('Using template', data);
-    } catch (error) {
-      console.log('No template! ', error);
-      data = '';
-    }
-
-    return this._createDoc(roomId, data);
-  }
-
-  private async _getTemplateForRoom(roomId: string) {
-    const room = await getRoom(this._editorApiConfig.roomServiceApi, roomId);
-
-    if (room == undefined) {
-      throw new Error('Room not found! Ignoring template.');
-    }
-
-    console.log('Getting question', room.questionId, room.roomId);
-    const question = await getQuestion(
-      this._editorApiConfig.questionServiceApi,
-      room.questionId,
-    );
-
-    const template = question.templates.find((t) => {
-      return t.langSlug === room.langSlug;
-    });
-
-    if (template == undefined) {
-      throw new Error('Template not found! Ignoring template.');
-    }
-
-    return template.code;
-  }
-
-  private _createDoc(roomId: string, data: string = '') {
+  private _createDoc(roomId: string) {
     const wssDoc = new WSSharedDoc(
       roomId,
       gcEnabled,

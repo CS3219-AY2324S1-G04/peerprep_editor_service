@@ -1,0 +1,83 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": { "project": "./tsconfig.json" },
+  "plugins": ["@typescript-eslint", "prettier"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:jsdoc/recommended-typescript",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/consistent-type-definitions": 2,
+    "@typescript-eslint/consistent-generic-constructors": [
+      2,
+      "type-annotation"
+    ],
+    "@typescript-eslint/explicit-member-accessibility": 2,
+    "@typescript-eslint/no-require-imports": 2,
+    "@typescript-eslint/no-throw-literal": 2,
+
+    // Refer to https://typescript-eslint.io/rules/member-ordering/#default-configuration
+    "@typescript-eslint/member-ordering": 2,
+
+    // Uses ESLint's camelcase conventions
+    // Taken from https://typescript-eslint.io/rules/naming-convention/#enforce-the-codebase-follows-eslints-camelcase-conventions
+    "camelcase": 0,
+    "@typescript-eslint/naming-convention": [
+      2,
+      {
+        "selector": "default",
+        "format": ["camelCase"]
+      },
+
+      {
+        "selector": "variable",
+        "format": ["camelCase", "UPPER_CASE"]
+      },
+      {
+        "selector": "parameter",
+        "format": ["camelCase"],
+        "leadingUnderscore": "allow"
+      },
+
+      {
+        "selector": "memberLike",
+        "modifiers": ["private"],
+        "format": ["camelCase"],
+        "leadingUnderscore": "require"
+      },
+
+      {
+        "selector": "typeLike",
+        "format": ["PascalCase"]
+      }
+    ],
+
+    "max-len": [
+      2,
+      {
+        "code": 80,
+        "tabWidth": 2,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreRegExpLiterals": true
+      }
+    ],
+    "prettier/prettier": 2,
+
+    // "jsdoc/check-examples": 1, // TODO: Enable this when it is supported by ESLint 8
+    "jsdoc/check-indentation": 1,
+    "jsdoc/check-line-alignment": 1,
+    "jsdoc/no-bad-blocks": 1,
+    "jsdoc/no-blank-block-descriptions": 1,
+    "jsdoc/no-blank-blocks": 1,
+    "jsdoc/require-asterisk-prefix": 1,
+    "jsdoc/require-description-complete-sentence": 1,
+    "jsdoc/require-file-overview": 1,
+    "jsdoc/require-hyphen-before-param-description": 1,
+    "jsdoc/require-throws": 1,
+    "jsdoc/sort-tags": 1
+  }
+}
