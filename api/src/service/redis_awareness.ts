@@ -24,7 +24,7 @@ export default class RedisAwareness {
 
     await this._redisSub.subscribe(`${this._roomId}:awareness`);
 
-    this._redisSub.on('messageBuffer', (channel, data: Buffer) => {
+    this._redisSub.on('messageBuffer', (_, data: Buffer) => {
       const message = data;
       awarenessProtocol.applyAwarenessUpdate(this._awareness, message, this);
     });

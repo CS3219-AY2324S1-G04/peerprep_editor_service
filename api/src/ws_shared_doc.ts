@@ -103,6 +103,17 @@ export default class WSSharedDoc extends Y.Doc {
     this._conns.forEach((_, conn) => conn.send(message));
   }
 
+  public override destroy() {
+    super.destroy();
+
+    this._conns.forEach((_, conn) => {
+      conn.close();
+    });
+
+    this._awareness.destroy();
+    this._persistence?.clearDocument(this._roomId);
+  }
+
   private _onConnectionClose(conn: UserConnection) {
     const awarenessIds = this._conns.get(conn);
 
@@ -114,7 +125,6 @@ export default class WSSharedDoc extends Y.Doc {
       null,
     );
 
-    // TODO: Handle persistence.
     if (this._conns.size === 0) {
       console.log('No more connections!', this._roomId);
     }
