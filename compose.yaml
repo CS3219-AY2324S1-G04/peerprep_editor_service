@@ -14,7 +14,7 @@ services:
     ports:
       - '${EDITOR_SERVICE_PORT}:9004'
     networks:
-      - peerprep
+      - peerprep_network
     depends_on:
       - editor_service_redis
     restart: unless-stopped
@@ -39,7 +39,7 @@ services:
       MQ_QUEUE_NAME: ${MQ_QUEUE_NAME}
       NODE_ENV: ${NODE_ENV}
     networks:
-      - peerprep
+      - peerprep_network
     ports:
       - '${EDITOR_DOCS_PORT}:${EDITOR_DOCS_PORT}'
     depends_on:
@@ -50,14 +50,15 @@ services:
       - ./docs/src:/editor_service_docs/src
 
   editor_service_redis:
-    image: redis:latest
+    image: redis:7-bookworm
     ports:
       - '${REDIS_PORT}:${REDIS_DOCKER_PORT}'
     networks:
-      - peerprep
+      - peerprep_network
+    command: /bin/sh -c "redis-server --requirepass ${REDIS_PASSWORD}"
     restart: unless-stopped
 
 networks:
-  peerprep:
+  peerprep_network:
       external: true
       name: peerprep
