@@ -5,7 +5,7 @@ services:
       target: dev
     environment:
       PORT: ${EDITOR_SERVICE_PORT}
-      SERVICE_ROUTE: ${SERVICE_ROUTE}
+      SERVICE_ROUTE: ${EDITOR_SERVICE_ROUTE}
       USER_SERVICE_API: 'http://user_service_api:9000/user-service'
       ROOM_SERVICE_API: 'http://room_service_api:9003/room-service'
       QUESTION_SERVICE_API: 'http://question_service_api:9001/question-service'
@@ -22,12 +22,12 @@ services:
       - ./api/node_modules:/editor_service_api/node_modules
       - ./api/src:/editor_service_api/src
 
-  editor_service_docs:
+  docs_service_api:
     build:
       context: ./docs
       target: dev
     environment:
-      PORT: ${EDITOR_DOCS_PORT}
+      PORT: ${DOCS_SERVICE_PORT}
       DOCS_SERVICE_ROUTE: ${DOCS_SERVICE_ROUTE}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_HOST: 'editor_service_redis'
@@ -41,13 +41,13 @@ services:
     networks:
       - peerprep_network
     ports:
-      - '${EDITOR_DOCS_PORT}:${EDITOR_DOCS_PORT}'
+      - '${DOCS_SERVICE_PORT}:${DOCS_SERVICE_PORT}'
     depends_on:
       - editor_service_redis
     restart: unless-stopped
     volumes:
-      - ./docs/node_modules:/editor_service_docs/node_modules
-      - ./docs/src:/editor_service_docs/src
+      - ./docs/node_modules:/docs_service_api/node_modules
+      - ./docs/src:/docs_service_api/src
 
   editor_service_redis:
     image: redis:7-bookworm

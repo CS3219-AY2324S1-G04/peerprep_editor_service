@@ -1,5 +1,5 @@
 FROM node:lts-hydrogen AS base
-WORKDIR /editor_service_docs
+WORKDIR /docs_service_api
 COPY package.json .
 COPY package-lock.json .
 
@@ -14,6 +14,6 @@ RUN npm install
 RUN npm run build
 
 FROM base as prod
-COPY --from=builder ./editor_service_docs/build .
+COPY --from=builder ./docs_service_api/build .
 RUN npm install --omit=dev -y
 CMD node main
