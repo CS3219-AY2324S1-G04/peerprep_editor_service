@@ -1,18 +1,19 @@
-FROM node:lts-hydrogen AS builder
-
+FROM node:lts-hydrogen AS base
 WORKDIR /editor_service_docs
-COPY . .
-RUN npm install
-RUN npm run build
-
-FROM node:lts-hydrogen
-
-WORKDIR /editor_service_docs
-
-COPY --from=builder ./editor_service_docs/build .
 COPY package.json .
 COPY package-lock.json .
 
-RUN npm install --omit=dev -y
+FROM base AS dev
+COPY nodemon.json .
+RUN npm install
+CMD npm run start:dev
 
+FROM base as builder
+COPY src ./src
+RUN npm install
+RUN npm run build
+
+FROM base as prod
+COPY --from=builder ./editor_service_docs/build .
+RUN npm install --omit=dev -y
 CMD node main

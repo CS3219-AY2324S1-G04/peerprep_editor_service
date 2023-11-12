@@ -1,6 +1,8 @@
 services:
   editor_service_api:
-    build: ./api
+    build:
+      context: ./api
+      target: dev
     environment:
       PORT: ${EDITOR_SERVICE_PORT}
       SERVICE_ROUTE: ${SERVICE_ROUTE}
@@ -16,9 +18,14 @@ services:
     depends_on:
       - editor_service_redis
     restart: unless-stopped
+    volumes:
+      - ./api/node_modules:/editor_service_api/node_modules
+      - ./api/src:/editor_service_api/src
 
   editor_service_docs:
-    build: ./docs
+    build:
+      context: ./docs
+      target: dev
     environment:
       PORT: ${EDITOR_DOCS_PORT}
       DOCS_SERVICE_ROUTE: ${DOCS_SERVICE_ROUTE}
@@ -38,6 +45,9 @@ services:
     depends_on:
       - editor_service_redis
     restart: unless-stopped
+    volumes:
+      - ./docs/node_modules:/editor_service_docs/node_modules
+      - ./docs/src:/editor_service_docs/src
 
   editor_service_redis:
     image: redis:latest
