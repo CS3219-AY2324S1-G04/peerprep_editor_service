@@ -2,7 +2,7 @@ services:
   editor_service_api:
     build:
       context: .
-      dockerfile: ./dockerfiles/editor_service_api.dockerfile
+      dockerfile: ./dockerfiles/api_dev.dockerfile
       target: dev
     environment:
       PORT: ${EDITOR_SERVICE_PORT}
