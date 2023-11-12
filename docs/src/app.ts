@@ -61,7 +61,6 @@ export default class App {
 
   private _setupHandler(handler: RouteHandler) {
     const route = this._editorDocsConfig.docsServiceRoute + handler.route;
-    console.log(route);
 
     switch (handler.method) {
       case HttpMethod.get:
