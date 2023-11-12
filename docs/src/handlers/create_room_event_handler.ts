@@ -3,6 +3,7 @@ import Y from 'yjs';
 
 import EditorDocsConfig from '../configs/editor_docs_config';
 import { getQuestion } from '../services/question_service';
+import RedisClient from '../services/redis_client';
 import {
   EventType,
   Room,
@@ -10,16 +11,21 @@ import {
 } from '../services/room_service_mq_consumer';
 import RoomEventHandler from './room_event_handler';
 
+const DOCS_SET_KEY = 'docs';
+
 export default class CreateRoomEventHandler extends RoomEventHandler {
+  private _redisClient: RedisClient;
   private _persistence: RedisPersistence;
   private _editorDocsConfig: EditorDocsConfig;
 
   public constructor(
     editorDocsConfig: EditorDocsConfig,
+    redisClient: RedisClient,
     persistence: RedisPersistence,
   ) {
     super();
     this._editorDocsConfig = editorDocsConfig;
+    this._redisClient = redisClient;
     this._persistence = persistence;
   }
 
@@ -33,13 +39,20 @@ export default class CreateRoomEventHandler extends RoomEventHandler {
       const yDoc = new Y.Doc();
       const room = roomEvent.room;
 
-      // TODO: Allow only only one instance of editor docs to setup doc.
-      await this._setupDoc(room, yDoc);
+      const redis = this._redisClient.createInstance();
+
+      if (await redis.sismember(DOCS_SET_KEY, room.roomId)) {
+        return;
+      }
+
+      // TODO: Allow only only one instance of editor docs to insert template.
+      await this._insertTemplate(room, yDoc);
       this._persistence.bindState(room.roomId, yDoc);
+      redis.sadd(DOCS_SET_KEY, room.roomId);
     };
   }
 
-  private async _setupDoc(room: Room, yDoc: Y.Doc) {
+  private async _insertTemplate(room: Room, yDoc: Y.Doc) {
     let template: string;
 
     try {

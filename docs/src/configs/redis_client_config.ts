@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link RedisClientConfig}.
+ */
 const redisHostEnv = 'REDIS_HOST';
 const redisPortEnv = 'REDIS_PORT';
 
