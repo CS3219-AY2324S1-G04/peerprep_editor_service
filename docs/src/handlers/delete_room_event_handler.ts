@@ -29,12 +29,12 @@ export default class DeleteRoomEventHandler extends RoomEventHandler {
       console.log('On delete room', roomEvent);
       const room = roomEvent.room;
 
-      // TODO: Delay deletion from database for history attempt service.
-      // await this._persistence.clearDocument(room.roomId);
+      await this._persistence.clearDocument(room.roomId);
 
       const redis = this._redisClient.createInstance();
-      redis.publish(`${room.roomId}:${DELETE_CHANNEL}`, room.roomId);
-      redis.srem(DOCS_SET_KEY, room.roomId);
+
+      await redis.srem(DOCS_SET_KEY, room.roomId);
+      await redis.publish(`${room.roomId}:${DELETE_CHANNEL}`, room.roomId);
     };
   }
 }

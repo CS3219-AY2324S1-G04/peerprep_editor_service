@@ -22,8 +22,6 @@ export default class RoomConnectionHandler extends ConnectionHandler {
   }
 
   private async _setupConnection(conn: WebSocket, req: Request) {
-    console.log('\n Setup connection');
-
     try {
       const roomId = this._parseUrlForRoomId(req.url);
       const doc = this._docsManager.getDoc(roomId);
@@ -37,8 +35,6 @@ export default class RoomConnectionHandler extends ConnectionHandler {
       console.log('Unable to setup connection!', error);
       conn.close();
     }
-
-    console.log('Setup connection complete');
   }
 
   private _parseUrlForRoomId(url: string) {

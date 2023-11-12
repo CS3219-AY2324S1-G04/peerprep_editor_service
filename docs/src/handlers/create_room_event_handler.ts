@@ -35,7 +35,7 @@ export default class CreateRoomEventHandler extends RoomEventHandler {
 
   public override get handle(): (roomEvent: RoomEvent) => Promise<void> {
     return async (roomEvent: RoomEvent) => {
-      console.log('create room', roomEvent);
+      console.log('On create room', roomEvent);
       const yDoc = new Y.Doc();
       const room = roomEvent.room;
 
@@ -45,10 +45,11 @@ export default class CreateRoomEventHandler extends RoomEventHandler {
         return;
       }
 
-      // TODO: Allow only only one instance of editor docs to insert template.
       await this._insertTemplate(room, yDoc);
+
       this._persistence.bindState(room.roomId, yDoc);
-      redis.sadd(DOCS_SET_KEY, room.roomId);
+
+      await redis.sadd(DOCS_SET_KEY, room.roomId);
     };
   }
 

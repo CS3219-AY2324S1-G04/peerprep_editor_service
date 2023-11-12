@@ -10,14 +10,18 @@ export default class RedisDocsService {
     this._redisClient = redisClient;
   }
 
-  public subscribeToRoomDeletion(roomId: string, onDelete: () => void) {
+  public async subscribeToRoomDeletion(
+    roomId: string,
+    onDelete: () => Promise<void>,
+  ) {
     const redis = this._redisClient.createInstance();
-    const channel = `$${roomId}:${DELETE_CHANNEL}`;
+    const channel = `${roomId}:${DELETE_CHANNEL}`;
 
-    redis.subscribe(channel);
-    redis.on('message', () => {
-      onDelete();
-      redis.unsubscribe(channel);
+    await redis.subscribe(channel);
+    redis.on('message', async (_, roomId) => {
+      console.log('Receive delete room msg', roomId);
+      await onDelete();
+      await redis.unsubscribe(channel);
     });
   }
 

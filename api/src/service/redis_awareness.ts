@@ -35,7 +35,11 @@ export default class RedisAwareness {
     });
   }
 
-  private _publishAwarenessUpdate = (
+  public async disconnect() {
+    await this._redisSub.unsubscribe(`${this._roomId}:awareness`);
+  }
+
+  private _publishAwarenessUpdate = async (
     { added, updated, removed }: AwarenessUpdate,
     source: unknown,
   ) => {
@@ -46,7 +50,7 @@ export default class RedisAwareness {
 
     const encoded = encodeAwarenessUpdate(this._awareness, changedClients);
     const message = Buffer.from(encoded);
-    this._redisPub.publish(`${this._roomId}:awareness`, message);
+    await this._redisPub.publish(`${this._roomId}:awareness`, message);
   };
 
   // TODO: Teardown on delete room.

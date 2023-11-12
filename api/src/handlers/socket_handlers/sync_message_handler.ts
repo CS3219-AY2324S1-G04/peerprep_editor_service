@@ -40,7 +40,6 @@ export default class SyncMessageHandler extends SocketMessageHandler {
         // message, there is no need to send the message. When `encoder` only
         // contains the type of reply, its length is 1.
         if (length(encoder) > 1) {
-          console.log('Send sync step 2');
           this._conn.send(toUint8Array(encoder));
         }
       } catch (err) {

@@ -44,13 +44,14 @@ export default class DocsManager {
     );
 
     await redisAwareness.connect();
-
-    this._redisDocsService.subscribeToRoomDeletion(roomId, () => {
-      this._removeDoc(roomId);
-      this._redisPersistence.closeDoc(roomId);
+    await this._redisDocsService.subscribeToRoomDeletion(roomId, async () => {
+      await this._removeDoc(roomId);
+      await redisAwareness.disconnect();
     });
 
     this._wssDocs.set(roomId, wssDoc);
+
+    console.log(`Bind to room ${roomId}`);
     return wssDoc;
   }
 
@@ -68,10 +69,14 @@ export default class DocsManager {
     return doc;
   }
 
-  private _removeDoc(roomId: string): void {
+  private async _removeDoc(roomId: string): Promise<void> {
     const doc = this._wssDocs.get(roomId);
     doc?.destroy();
     this._wssDocs.delete(roomId);
+
+    await this._redisPersistence.closeDoc(roomId);
+
+    console.log(`Unbind to room ${roomId}`);
   }
 
   private _createWssDoc(roomId: string) {

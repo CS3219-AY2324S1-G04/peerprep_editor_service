@@ -48,7 +48,7 @@ export default class RoomUpgradeHandler extends UpgradeHandler {
 
         wss.handleUpgrade(request, socket, head, handleAuth);
       } catch (error) {
-        console.error('Reject connection', request.url, error);
+        console.error('Reject connection', request.url);
         socket.destroy();
       }
     };
