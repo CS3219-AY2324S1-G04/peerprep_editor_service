@@ -30,6 +30,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: editor-service-redis-client-secret
+                  key: redis-password
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:
@@ -49,12 +50,13 @@ spec:
               value: http://user-service-api-service:9000/user-service
             - name: ROOM_SERVICE_API
               value: http://room-service-api-service:9003/room-service
-            - name: QUESTION_SERVICE_API
-              value: http://question-service-api-service:9001/question-service
             - name: PORT
               value: '9004'
             - name: SERVICE_ROUTE
-              value: /editor-service
+              valueFrom:
+                configMapKeyRef:
+                  name: editor-service-api-config-map
+                  key: editor-service-route
             - name: NODE_ENV
               value: production
           resources:
