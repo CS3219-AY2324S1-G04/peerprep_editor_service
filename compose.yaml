@@ -26,7 +26,7 @@ services:
   editor_service_redis:
     image: redis:7-bookworm
     ports:
-      - '${REDIS_PORT}:${REDIS_DOCKER_PORT}'
+      - '${REDIS_DOCKER_PORT}:${REDIS_PORT}'
     networks:
       - peerprep_network
     command: /bin/sh -c "redis-server --requirepass ${REDIS_PASSWORD}"
