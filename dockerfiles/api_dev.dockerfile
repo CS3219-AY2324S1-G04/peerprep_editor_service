@@ -5,7 +5,6 @@ COPY package-lock.json .
 
 FROM base AS dev
 COPY nodemon.json .
-RUN npm install
 CMD npm run start:dev
 
 FROM base as builder

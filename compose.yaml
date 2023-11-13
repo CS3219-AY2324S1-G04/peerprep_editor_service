@@ -11,7 +11,10 @@ services:
       ROOM_SERVICE_API: 'http://room_service_api:9003/room-service'
       QUESTION_SERVICE_API: 'http://question_service_api:9001/question-service'
       REDIS_PORT: ${REDIS_PORT}
-      REDIS_HOST: 'editor_service_redis'
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB}
     ports:
       - '${EDITOR_SERVICE_PORT}:9004'
     networks:
@@ -21,12 +24,13 @@ services:
     restart: unless-stopped
     volumes:
       - ./node_modules:/editor_service_api/node_modules
+      - ./build:/editor_service_api/build
       - ./src:/editor_service_api/src
 
   editor_service_redis:
     image: redis:7-bookworm
     ports:
-      - '${REDIS_DOCKER_PORT}:${REDIS_PORT}'
+      - '${REDIS_DOCKER_PORT}:6379'
     networks:
       - peerprep_network
     command: /bin/sh -c "redis-server --requirepass ${REDIS_PASSWORD}"
