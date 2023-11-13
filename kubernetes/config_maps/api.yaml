@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: editor-service-api-config-map
+  namespace: peerprep
+data:
+  editor-service-route: /editor-service

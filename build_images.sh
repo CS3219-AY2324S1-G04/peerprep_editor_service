@@ -20,17 +20,12 @@ export_dir="./docker_build"
 ################################################################################
 
 # This list should contain a unique key for each image.
-image_keys=(editor_service docs_service)
+image_keys=(api)
 
 # Editor service api image
 images_api_name=${cr}peerprep_editor_service_api
-images_api_docker_file="./dockerfiles/editor_service.dockerfile"
+images_api_docker_file="./dockerfiles/api.dockerfile"
 images_api_should_build=0
-
-# Docs service api image
-images_database_initialiser_name=${cr}peerprep_docs_service_api
-images_database_initialiser_docker_file="./dockerfiles/docs_service.dockerfile"
-images_database_initialiser_should_build=0
 
 ################################################################################
 #                                                                              #
