@@ -1,8 +1,8 @@
-import { RedisOptions } from "ioredis/built/cluster/util";
-
 /**
  * @file Redis client config using .env as default.
  */
+import { RedisOptions } from 'ioredis/built/cluster/util';
+
 const redisHostEnv = 'REDIS_HOST';
 const redisPortEnv = 'REDIS_PORT';
 const redisUsernameEnv = 'REDIS_USERNAME';

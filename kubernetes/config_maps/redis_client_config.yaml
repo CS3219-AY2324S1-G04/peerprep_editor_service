@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: editor-service-redis-client-config-map
+  namespace: peerprep
+data:
+  redis-username: default
+  redis-host: redis-15784.c1.asia-northeast1-1.gce.cloud.redislabs.com
+  redis-port: '15784'
+  redis-db: '0'

@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: editor-service-api-deployment
+  namespace: peerprep
+  labels:
+    app: editor-service-api
+spec:
+  selector:
+    matchLabels:
+      app: editor-service-api
+  template:
+    metadata:
+      namespace: peerprep
+      labels:
+        app: editor-service-api
+    spec:
+      containers:
+        - name: editor-service-api
+          image: ghcr.io/cs3219-ay2324s1-g04/peerprep_editor_service_api
+          ports:
+            - containerPort: 9004
+          env:
+            - name: REDIS_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: editor-service-redis-client-config-map
+                  key: redis-username
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: editor-service-redis-client-secret
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: editor-service-redis-client-config-map
+                  key: redis-host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: editor-service-redis-client-config-map
+                  key: redis-port
+            - name: REDIS_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: editor-service-redis-client-config-map
+                  key: redis-db
+            - name: USER_SERVICE_API
+              value: http://user-service-api-service:9000/user-service
+            - name: ROOM_SERVICE_API
+              value: http://room-service-api-service:9003/room-service
+            - name: QUESTION_SERVICE_API
+              value: http://question-service-api-service:9001/question-service
+            - name: PORT
+              value: '9004'
+            - name: SERVICE_ROUTE
+              value: /editor-service
+            - name: NODE_ENV
+              value: production
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 100m
+            limits:
+              memory: 256Mi
+              cpu: 500m
