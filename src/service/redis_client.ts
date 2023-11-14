@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link RedisClientConfig}.
+ */
 import { Redis } from 'ioredis';
 
 import RedisClientConfig from '../configs/redis_client_config';

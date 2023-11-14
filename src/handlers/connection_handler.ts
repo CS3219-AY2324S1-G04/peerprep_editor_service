@@ -1,5 +1,5 @@
 /**
- * @file Handles http connection .
+ * @file Handles http connection.
  */
 import { Request } from 'express';
 import WebSocket from 'ws';

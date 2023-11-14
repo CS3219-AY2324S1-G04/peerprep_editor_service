@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link RedisDocsService}.
+ */
 import RedisClient from './redis_client';
 
 const DOCS_KEY = 'docs';
@@ -10,7 +13,7 @@ export default class RedisDocsService {
     this._redisClient = redisClient;
   }
 
-  public async subscribeToRoomDeletion(
+  public async registerRoomDeletion(
     roomId: string,
     onDelete: () => Promise<void>,
   ) {
@@ -28,6 +31,7 @@ export default class RedisDocsService {
   public async isDocCreated(roomId: string) {
     const redis = this._redisClient.createInstance();
     const status: number = await redis.sismember(DOCS_KEY, roomId);
+    redis.quit();
     return status == 1;
   }
 }

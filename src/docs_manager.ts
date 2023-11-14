@@ -1,6 +1,7 @@
 /**
  * @file Manages docs.
  */
+import { Awareness } from 'y-protocols/awareness';
 import { RedisPersistence } from 'y-redis';
 
 import RedisAwareness from './service/redis_awareness';
@@ -13,6 +14,7 @@ const gcEnabled = process.env.GC !== 'false' && process.env.GC !== '0';
 
 export default class DocsManager {
   private _wssDocs: Map<string, WSSharedDoc>;
+  private _awarenessMap: Map<string, RedisAwareness>;
   private _redisClient: RedisClient;
   private _redisPersistence: RedisPersistence;
   private _redisDocsService: RedisDocsService;
@@ -23,6 +25,7 @@ export default class DocsManager {
     redisDocsService: RedisDocsService,
   ) {
     this._wssDocs = new Map();
+    this._awarenessMap = new Map();
     this._redisClient = redisClient;
     this._redisPersistence = redisPersistence;
     this._redisDocsService = redisDocsService;
@@ -35,23 +38,14 @@ export default class DocsManager {
 
     const wssDoc = this._createWssDoc(roomId);
 
-    this._redisPersistence.bindState(roomId, wssDoc);
+    await Promise.all([
+      await this._createRedisAwareness(roomId, wssDoc.awareness),
+      await this._redisDocsService.registerRoomDeletion(roomId, async () => {
+        await this._removeDoc(roomId);
+      }),
+    ]);
 
-    const redisAwareness = new RedisAwareness(
-      this._redisClient,
-      roomId,
-      wssDoc.awareness,
-    );
-
-    await redisAwareness.connect();
-    await this._redisDocsService.subscribeToRoomDeletion(roomId, async () => {
-      await this._removeDoc(roomId);
-      await redisAwareness.disconnect();
-    });
-
-    this._wssDocs.set(roomId, wssDoc);
-
-    console.log(`Bind to room ${roomId}`);
+    console.log(`Bind room ${roomId}`);
     return wssDoc;
   }
 
@@ -69,19 +63,49 @@ export default class DocsManager {
     return doc;
   }
 
+  private _createWssDoc(roomId: string) {
+    const wssDoc = new WSSharedDoc(roomId, gcEnabled, async () => {
+      await this._removeDoc(roomId);
+    });
+    this._wssDocs.set(roomId, wssDoc);
+    this._redisPersistence.bindState(roomId, wssDoc);
+    return wssDoc;
+  }
+
+  private async _createRedisAwareness(roomId: string, awareness: Awareness) {
+    const redisAwareness = new RedisAwareness(
+      this._redisClient,
+      roomId,
+      awareness,
+    );
+
+    await redisAwareness.connect();
+
+    this._awarenessMap.set(roomId, redisAwareness);
+  }
+
   private async _removeDoc(roomId: string): Promise<void> {
-    const doc = this._wssDocs.get(roomId);
-    doc?.destroy();
+    if (!this._wssDocs.has(roomId) && !this._awarenessMap.has(roomId)) {
+      return;
+    }
+
+    await this._removeRedisAwareness(roomId);
+    await this._removeWssDoc(roomId);
+
+    console.log(`Unbind room ${roomId}`);
+  }
+
+  private async _removeWssDoc(roomId: string) {
+    const wssDoc = this._wssDocs.get(roomId);
+    wssDoc?.destroy();
     this._wssDocs.delete(roomId);
 
     await this._redisPersistence.closeDoc(roomId);
-
-    console.log(`Unbind to room ${roomId}`);
   }
 
-  private _createWssDoc(roomId: string) {
-    const wssDoc = new WSSharedDoc(roomId, gcEnabled);
-    this._wssDocs.set(roomId, wssDoc);
-    return wssDoc;
+  private async _removeRedisAwareness(roomId: string) {
+    const redisAwareness = this._awarenessMap.get(roomId);
+    redisAwareness?.disconnect();
+    this._awarenessMap.delete(roomId);
   }
 }
