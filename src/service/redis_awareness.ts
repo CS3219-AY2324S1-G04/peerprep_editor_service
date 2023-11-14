@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link RedisAwareness}.
+ */
 import { Redis } from 'ioredis';
 import awarenessProtocol, {
   Awareness,
@@ -52,6 +55,4 @@ export default class RedisAwareness {
     const message = Buffer.from(encoded);
     await this._redisPub.publish(`${this._roomId}:awareness`, message);
   };
-
-  // TODO: Teardown on delete room.
 }

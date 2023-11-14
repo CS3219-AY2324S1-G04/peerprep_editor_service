@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link userServiceApi}.
+ */
 import { Axios } from 'axios';
 
 /**

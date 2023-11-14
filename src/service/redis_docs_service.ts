@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link RedisDocsService}.
+ */
 import RedisClient from './redis_client';
 
 const DOCS_KEY = 'docs';

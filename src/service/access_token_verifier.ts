@@ -1,3 +1,6 @@
+/**
+ * @file Defines {@link AccessTokenVerifier}.
+ */
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
 export default class AccessTokenVerifier {
