@@ -35,8 +35,13 @@ export default class WSSharedDoc extends Y.Doc {
   private _roomId: string;
   private _conns: Map<UserConnection, Set<number>>;
   private _awareness: Awareness;
+  private _onConnsClose: () => Promise<void>;
 
-  public constructor(roomId: string, gcEnabled: boolean = true) {
+  public constructor(
+    roomId: string,
+    gcEnabled: boolean = true,
+    onConnsClose: () => Promise<void>,
+  ) {
     super({ gc: gcEnabled });
 
     this._roomId = roomId;
@@ -57,6 +62,8 @@ export default class WSSharedDoc extends Y.Doc {
         }),
       );
     }
+
+    this._onConnsClose = onConnsClose;
   }
 
   public get roomId() {
@@ -110,6 +117,7 @@ export default class WSSharedDoc extends Y.Doc {
 
     if (this._conns.size === 0) {
       console.log('No more connections!', this._roomId);
+      this._onConnsClose();
     }
   }
 

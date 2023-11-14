@@ -39,7 +39,12 @@ export default class RedisAwareness {
   }
 
   public async disconnect() {
+    this._awareness.off('update', this._publishAwarenessUpdate);
+
     await this._redisSub.unsubscribe(`${this._roomId}:awareness`);
+
+    this._redisSub.quit();
+    this._redisPub.quit();
   }
 
   private _publishAwarenessUpdate = async (

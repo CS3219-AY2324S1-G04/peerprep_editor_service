@@ -6,7 +6,7 @@ import { Axios } from 'axios';
 /**
  * Get access token public key.
  * @param userServiceApi - The user service api.
- * @returns Public key for verifying access tokens
+ * @returns Public key for verifying access tokens.
  */
 async function getAccessTokenPublicKey(
   userServiceApi: string,
