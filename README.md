@@ -4,7 +4,7 @@
 
 The Editor Service provides the mechanism for real-time collaboration (e.g. concurrent code editing) between the authenticated and matched users in the collaborative space.
 
-- Providing document synchronization that allows users in the same room to edit the same code in real-time.
+- Provides document synchronization that allows users in the same room to edit the same code in real-time.
 - Authenticates users based on their access to a given room.
 
 ## Table of Contents
@@ -13,6 +13,7 @@ The Editor Service provides the mechanism for real-time collaboration (e.g. conc
   - [Table of Contents](#table-of-contents)
   - [Requirements](#requirements)
   - [Quick Start](#quick-start)
+  - [Build Script](#build-script)
   - [Environment Variables](#environment-variables)
   - [Overview](#overview)
     - [editor\_service\_api](#editor_service_api)
@@ -39,7 +40,14 @@ Editor Service requires the following services to operate correctly.
 1. Clone this repository.
 2. Configure the `.env` file (Refer to [Environment Variables](#environment-variables))
 3. Install the necessary dependencies `npm install`
-4. Build and run the docker container. `docker compose up -d`
+4. Run the [build script](#build-script).
+5. Run the docker container. `docker compose up -d`
+
+## Build Script
+
+`build_images.sh` is a build script for building the Docker images and optionally pushing them to the container registry. To get more information about the script, run:
+
+`./build_images.sh -h`
 
 ## Environment Variables
 
@@ -76,7 +84,7 @@ The above architectural diagram describes the main interactions between the clie
 
 ### Docs Service
 
-- A service that handles that provides document setup and teardown based on room creation and deletion events from the Room Service MQ.
+- A service that provides document setup and teardown based on room creation and deletion events from the Room Service MQ.
 - **Setup**: Insertion of question code template.
 - **Teardown**: Publishes room deletion message to Editor Service instances through Redis and clears the document data from Redis.
 - **Document Retrieval**: Provides a REST API endpoint for other services to retrieve document data.

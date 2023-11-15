@@ -1,5 +1,6 @@
 services:
   editor_service_api:
+    image: ghcr.io/cs3219-ay2324s1-g04/peerprep_editor_service_api
     build:
       context: .
       dockerfile: ./dockerfiles/api_dev.dockerfile
