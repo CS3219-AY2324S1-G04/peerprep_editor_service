@@ -114,7 +114,7 @@ This is the main deployment method for production.
 - Docker images must be pushed to the container registry and made public.
   - To push to the container registry (assuming one has the necessary permissions), run: `./build_images.sh -p`
   - To make the images public, change the visibility of the image on [GitHub](https://github.com/orgs/CS3219-AY2324S1-G04/packages).
-- Kubernetes cluster must be setup as specified in the [main repository](https://github.com/CS3219-AY2324S1/ay2324s1-course-assessment-g04#deployment).
+- Kubernetes cluster must be setup as specified in the [main repository](https://github.com/CS3219-AY2324S1/ay2324s1-course-assessment-g04/blob/master/project/project.md#g04-project).
 
 **Steps:**
 
